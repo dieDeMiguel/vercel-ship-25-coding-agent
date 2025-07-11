@@ -3,6 +3,6 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });
 
-codingAgent("Tell me about this project")
+codingAgent("Please add a contributing section to the README.md file")
   .then(console.log)
   .catch(console.error);
