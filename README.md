@@ -49,3 +49,16 @@ Parameters:
 
 - `prompt` - What you want the agent to do
 - `repoUrl` - GitHub repository URL
+
+## Contributing
+
+Contributions are welcome!
+
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature/your-feature-name`).
+3. Make your changes.
+4. Commit your changes (`git commit -m 'Add some feature'`).
+5. Push to the branch (`git push origin feature/your-feature-name`).
+6. Open a Pull Request on GitHub.
+
+Please follow the code style used in the project and include tests or examples where appropriate.
