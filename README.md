@@ -8,6 +8,11 @@ Starter project for Vercel Ship "Building agents with the AI SDK". This coding a
 
 Contributions are welcome! To contribute, please fork the repository, create a new branch for your changes, and submit a pull request. Make sure to follow the existing code style and include appropriate tests.
 
+## About Me
+
+This project was created by a passionate developer who enjoys building innovative AI-powered solutions. With experience in modern JavaScript and TypeScript, I aim to create efficient, maintainable, and user-friendly software.
+
+
 1. Install the Vercel CLI: `npm i -g vercel`
 2. Deploy this repo with the button above.
 3. Clone the new repo locally.

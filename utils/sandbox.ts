@@ -85,6 +85,7 @@ export const createPR = async (
     const branchName = `${ branch || `feature/ai-changes` }-${Date.now()}`;
 
     // Setup git
+    console.log("Setting up git configuration...");
     await sandbox.runCommand("git", [
       "config",
       "user.email",
@@ -99,7 +100,10 @@ export const createPR = async (
     await sandbox.runCommand("git", ["remote", "set-url", "origin", authUrl]);
 
     // Create branch and commit changes
+    console.log(`Creating and switching to branch: ${branchName}`);
     await sandbox.runCommand("git", ["checkout", "-b", branchName]);
+    
+    console.log("Adding files to git...");
     await sandbox.runCommand("git", [
       "add",
       ".",
@@ -114,6 +118,7 @@ export const createPR = async (
     ]);
 
     // Check if there are changes to commit
+    console.log("Checking for changes to commit...");
     const diffResult = await sandbox.runCommand("git", [
       "diff",
       "--cached",
@@ -122,6 +127,7 @@ export const createPR = async (
     const diffOutput = await diffResult.output();
 
     if (!diffOutput.toString().trim()) {
+      console.log("No changes detected, creating minimal change...");
       // Create a minimal change if nothing to commit
       const timestamp = new Date().toISOString();
       await sandbox.runCommand("bash", [
@@ -140,17 +146,27 @@ export const createPR = async (
         ":!*.tbz2",
         ":!*.txz",
       ]);
+    } else {
+      console.log(`Changes detected in files: ${diffOutput.toString().trim()}`);
     }
 
+    console.log("Committing changes...");
     await sandbox.runCommand("git", ["commit", "-m", title]);
-    await sandbox.runCommand("git", ["push", "origin", branchName]);
+    
+    console.log(`Pushing to branch: ${branchName}`);
+    const pushResult = await sandbox.runCommand("git", ["push", "origin", branchName]);
+    const pushOutput = await pushResult.output();
+    console.log(`Push result: ${pushOutput}`);
 
     // Create PR via GitHub API
+    console.log("Creating PR via GitHub API...");
     const urlMatch = repoUrl!.match(/github\.com[\/:]([^\/]+)\/([^\/\.]+)/);
     if (!urlMatch) throw new Error("Invalid GitHub repository URL");
 
     const [, owner, repo] = urlMatch;
     const prData = { title, body, head: branchName, base: "main" };
+    
+    console.log(`Creating PR for ${owner}/${repo} with data:`, prData);
 
     const response = await sandbox.runCommand("curl", [
       "-s",
@@ -167,9 +183,13 @@ export const createPR = async (
       `https://api.github.com/repos/${owner}/${repo}/pulls`,
     ]);
 
-    const result = JSON.parse((await response.output()).toString());
+    const responseOutput = await response.output();
+    console.log(`GitHub API response: ${responseOutput}`);
+    
+    const result = JSON.parse(responseOutput.toString());
 
     if (result.html_url) {
+      console.log(`PR created successfully: ${result.html_url}`);
       return {
         success: true,
         branch: branchName,
@@ -177,9 +197,11 @@ export const createPR = async (
         pr_number: result.number,
       };
     } else {
+      console.error(`Failed to create PR. GitHub API response:`, result);
       throw new Error(result.message || "Failed to create PR");
     }
   } catch (error) {
+    console.error(`Error in createPR:`, error);
     return { error: error.message };
   }
 };
