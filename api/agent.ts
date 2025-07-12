@@ -1,12 +1,12 @@
 import { codingAgent } from "../utils/agent";
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<Response> {
   const body = await request.json();
-  const { prompt }: { prompt: string } = body;
+  const { prompt, repoUrl }: { prompt: string; repoUrl: string } = body;
 
   try {
-    const result = await codingAgent(prompt);
-    return new Response(JSON.stringify({ result }), {
+    const { response } = await codingAgent(prompt, repoUrl);
+    return new Response(JSON.stringify({ prompt, response, repoUrl }), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (e) {
