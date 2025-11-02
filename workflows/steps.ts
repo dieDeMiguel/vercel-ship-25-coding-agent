@@ -1,5 +1,4 @@
-import { FatalError, RetryableError, sleep } from "workflow";
-import type { Sandbox } from "@vercel/sandbox";
+import { FatalError, RetryableError } from "workflow";
 import { 
   createSandbox, 
   listFiles, 
@@ -33,58 +32,44 @@ interface NotificationData {
 export async function initializeSandbox(repoUrl: string) {
   "use step";
   
-  const maxRetries = 3;
-  let lastError: Error | null = null;
-  
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`Initializing sandbox for repository: ${repoUrl} (attempt ${attempt}/${maxRetries})`);
-      const sandbox = await createSandbox(repoUrl);
-      
-      const repoInfoResult = await sandbox.runCommand("git", ["remote", "-v"]);
-      const repoInfo = await repoInfoResult.output();
-      
-      console.log(`Sandbox initialized successfully on attempt ${attempt}`);
-      console.log(`Repository info: ${repoInfo}`);
-      
-      return { 
-        sandbox, 
-        repoInfo: repoInfo.toString() 
-      };
-    } catch (error) {
-      lastError = error as Error;
-      console.error(`Attempt ${attempt}/${maxRetries} failed: ${lastError.message}`);
-      
-      // If it's a 400 error (likely auth/quota issue), don't retry
-      if (lastError.message.includes('400')) {
-        throw new FatalError(
-          `Sandbox initialization failed with 400 error. ` +
-          `This is likely due to: ` +
-          `1) Missing VERCEL_OIDC_TOKEN, ` +
-          `2) Sandbox quota exceeded, or ` +
-          `3) Invalid repository URL. ` +
-          `Error: ${lastError.message}`
-        );
-      }
-      
-      // For other errors, retry with exponential backoff
-      if (attempt < maxRetries) {
-        const waitTime = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
-        console.log(`Waiting ${waitTime}ms before retry...`);
-        await sleep(waitTime);
-      }
+  try {
+    console.log(`Initializing sandbox for repository: ${repoUrl}`);
+    const sandbox = await createSandbox(repoUrl);
+    
+    const repoInfoResult = await sandbox.runCommand("git", ["remote", "-v"]);
+    const repoInfo = await repoInfoResult.output();
+    
+    console.log(`Sandbox initialized successfully`);
+    console.log(`Repository info: ${repoInfo}`);
+    
+    // ✅ FIX: Only return serializable data (strings), not the Sandbox instance
+    return { 
+      repoUrl,  // Return the URL so we can recreate sandbox in next steps
+      repoInfo: repoInfo.toString() 
+    };
+  } catch (error) {
+    const err = error as Error;
+    console.error(`Sandbox initialization failed: ${err.message}`);
+    
+    // If it's a 400 error (auth/quota issue), don't retry
+    if (err.message.includes('400')) {
+      throw new FatalError(
+        `Sandbox initialization failed with 400 error. ` +
+        `This is likely due to: ` +
+        `1) Missing VERCEL_OIDC_TOKEN, ` +
+        `2) Sandbox quota exceeded, or ` +
+        `3) Invalid repository URL. ` +
+        `Error: ${err.message}`
+      );
     }
+    
+    // ✅ FIX: Use RetryableError to let SDK handle retries automatically
+    throw new RetryableError(`Failed to initialize sandbox: ${err.message}`);
   }
-  
-  // All retries exhausted
-  throw new FatalError(
-    `Failed to initialize sandbox after ${maxRetries} attempts. ` +
-    `Last error: ${lastError?.message}`
-  );
 }
 
 export async function analyzeRepository(
-  sandbox: Sandbox,
+  repoUrl: string,
   prompt: string,
   repoInfo: string
 ) {
@@ -92,6 +77,9 @@ export async function analyzeRepository(
   
   try {
     console.log(`Analyzing repository structure for prompt: "${prompt}"`);
+    
+    // ✅ FIX: Recreate sandbox from repoUrl instead of receiving instance
+    const sandbox = await createSandbox(repoUrl);
     
     // List root directory to understand project structure
     const rootFiles = await listFiles(sandbox, ".");
@@ -115,12 +103,17 @@ export async function analyzeRepository(
     };
   } catch (error) {
     console.error(`Repository analysis failed: ${(error as Error).message}`);
-    throw new FatalError(`Failed to analyze repository: ${(error as Error).message}`);
+    
+    // Use RetryableError for transient failures
+    if ((error as Error).message.includes('400')) {
+      throw new FatalError(`Failed to analyze repository: ${(error as Error).message}`);
+    }
+    throw new RetryableError(`Failed to analyze repository: ${(error as Error).message}`);
   }
 }
 
 export async function executeChanges(
-  sandbox: Sandbox,
+  repoUrl: string,
   prompt: string,
   filesToModify: string[]
 ) {
@@ -129,6 +122,9 @@ export async function executeChanges(
   try {
     console.log(`Executing AI-driven changes for: "${prompt}"`);
     console.log(`Target files: ${filesToModify.join(", ")}`);
+    
+    // ✅ FIX: Recreate sandbox from repoUrl
+    const sandbox = await createSandbox(repoUrl);
     
     // Run the coding agent to determine and execute changes
     const { response } = await codingAgent(prompt);
@@ -159,12 +155,16 @@ export async function executeChanges(
     return { changes, branch };
   } catch (error) {
     console.error(`Change execution failed: ${(error as Error).message}`);
-    throw new FatalError(`Failed to execute changes: ${(error as Error).message}`);
+    
+    // Use RetryableError for transient failures
+    if ((error as Error).message.includes('400')) {
+      throw new FatalError(`Failed to execute changes: ${(error as Error).message}`);
+    }
+    throw new RetryableError(`Failed to execute changes: ${(error as Error).message}`);
   }
 }
 
 export async function createPullRequest(
-  sandbox: Sandbox,
   repoUrl: string,
   branch: string,
   changes: Changes
@@ -173,6 +173,9 @@ export async function createPullRequest(
   
   try {
     console.log(`Creating pull request for branch: ${branch}`);
+    
+    // ✅ FIX: Recreate sandbox from repoUrl
+    const sandbox = await createSandbox(repoUrl);
     
     const prDetails = {
       title: `AI Change: ${changes.prompt.substring(0, 60)}`,
@@ -194,7 +197,12 @@ export async function createPullRequest(
     };
   } catch (error) {
     console.error(`Pull request creation failed: ${(error as Error).message}`);
-    throw new FatalError(`Failed to create PR: ${(error as Error).message}`);
+    
+    // Use RetryableError for transient failures
+    if ((error as Error).message.includes('400') || (error as Error).message.includes('authentication')) {
+      throw new FatalError(`Failed to create PR: ${(error as Error).message}`);
+    }
+    throw new RetryableError(`Failed to create PR: ${(error as Error).message}`);
   }
 }
 

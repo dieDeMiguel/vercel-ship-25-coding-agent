@@ -13,27 +13,26 @@ export async function codeModificationWorkflow(
 ) {
   "use workflow";
 
-  // Step 1: Initialize sandbox with repo
-  const { sandbox, repoInfo } = await initializeSandbox(repoUrl);
+  // Step 1: Initialize sandbox with repo (returns only serializable data)
+  const { repoUrl: validatedRepoUrl, repoInfo } = await initializeSandbox(repoUrl);
   
-  // Step 2: Analyze repo structure (determine what files need changing)
+  // Step 2: Analyze repo structure (recreates sandbox internally)
   const { filesToModify, analysis } = await analyzeRepository(
-    sandbox, 
+    validatedRepoUrl, 
     prompt, 
     repoInfo
   );
   
-  // Step 3: Execute the AI-driven changes
+  // Step 3: Execute the AI-driven changes (recreates sandbox internally)
   const { changes, branch } = await executeChanges(
-    sandbox,
+    validatedRepoUrl,
     prompt,
     filesToModify
   );
   
-  // Step 4: Create PR on GitHub
+  // Step 4: Create PR on GitHub (recreates sandbox internally)
   const { prUrl, prNumber } = await createPullRequest(
-    sandbox,
-    repoUrl,
+    validatedRepoUrl,
     branch,
     changes
   );
