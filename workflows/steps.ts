@@ -127,7 +127,8 @@ export async function executeChanges(
     const sandbox = await createSandbox(repoUrl);
     
     // Run the coding agent to determine and execute changes
-    const { response } = await codingAgent(prompt);
+    // Pass repoUrl so agent can access repository files
+    const { response } = await codingAgent(prompt, repoUrl);
     
     console.log(`AI agent response: ${response}`);
     
