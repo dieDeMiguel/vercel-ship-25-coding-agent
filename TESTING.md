@@ -15,7 +15,7 @@ pnpm run test:manual
 
 ## Testing Methods
 
-### Method 1: Direct Test Script (Easiest)
+### Method 1: Direct Test Script (Recommended)
 
 ```bash
 pnpm run test:manual
@@ -23,7 +23,7 @@ pnpm run test:manual
 
 Shows step-by-step progress in terminal with all logs. Edit `test-workflow-manual.ts` to customize the prompt and repository.
 
-### Method 2: Production API
+### Method 2: Production API + Vercel Dashboard
 
 Deploy and test the live API:
 
@@ -43,16 +43,13 @@ curl -X POST https://your-app.vercel.app/api/agent \
 curl https://your-app.vercel.app/api/agent?runId=<runId>
 ```
 
-### Method 3: Vercel Dashboard (Best Visual Console)
+**View in Vercel Dashboard:**
+- Go to your project in Vercel
+- Click **Workflows** tab (if available)
+- See step-by-step execution timeline
+- View detailed logs and errors
 
-1. Deploy: `vercel --prod`
-2. Trigger workflow via API
-3. View in **Vercel Dashboard → Workflows tab**
-   - Step-by-step execution timeline
-   - Detailed logs for each step
-   - Error inspection and retry capabilities
-
-### Method 4: Without Test File
+### Method 3: Without Test File
 
 You can test directly using the workflow function:
 
@@ -124,13 +121,22 @@ VERCEL_OIDC_TOKEN=auto_pulled
 - [ ] Deploy and test production endpoint
 - [ ] View execution in Vercel Dashboard
 
-## No Test File Needed?
+## Available Scripts
+
+```bash
+pnpm run test:manual    # Run workflow test locally
+pnpm test              # Run original agent test
+```
+
+Note: `workflow dev` command is not yet available in this version of the Workflow SDK.
+
+## Testing Without Test File
 
 **Yes, you can test without `test-workflow-manual.ts`:**
 
-1. **Via API** - Deploy and use curl commands
-2. **Via Dashboard** - Trigger and monitor in Vercel UI
-3. **Direct Import** - Import and call the workflow function
+1. **Via Production API** - Deploy and use curl commands
+2. **Via Vercel Dashboard** - Trigger and monitor in Vercel UI  
+3. **Direct Import** - Import and call the workflow function directly
 
 The test file is just a convenience for local development. In production, workflows are triggered via the API endpoint.
 

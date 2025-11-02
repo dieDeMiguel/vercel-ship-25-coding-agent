@@ -5,9 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "tsx utils/test.ts",
-    "test:manual": "tsx test-workflow-manual.ts",
-    "dev": "workflow dev",
-    "dev:workflow": "workflow dev"
+    "test:manual": "tsx test-workflow-manual.ts"
   },
   "keywords": [],
   "author": "",
