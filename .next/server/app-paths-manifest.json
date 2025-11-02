@@ -1,9 +1,0 @@
-{
-  "/.well-known/workflow/v1/flow/route": "app/.well-known/workflow/v1/flow/route.js",
-  "/.well-known/workflow/v1/step/route": "app/.well-known/workflow/v1/step/route.js",
-  "/.well-known/workflow/v1/webhook/[token]/route": "app/.well-known/workflow/v1/webhook/[token]/route.js",
-  "/_global-error/page": "app/_global-error/page.js",
-  "/_not-found/page": "app/_not-found/page.js",
-  "/api/agent/route": "app/api/agent/route.js",
-  "/page": "app/page.js"
-}

@@ -1,3 +1,0 @@
-{
-  "/.well-known/workflow/v1/webhook/[token]/route": "app/.well-known/workflow/v1/webhook/[token]/route.js"
-}
