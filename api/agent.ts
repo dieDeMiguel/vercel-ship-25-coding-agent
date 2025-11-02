@@ -1,4 +1,3 @@
-import { start, getWorkflowRun } from "workflow";
 import { codeModificationWorkflow } from "../workflows/codeModification.js";
 
 interface WorkflowRequest {
@@ -8,9 +7,11 @@ interface WorkflowRequest {
 }
 
 interface WorkflowResponse {
-  status: "started" | "error";
-  runId?: string;
-  message: string;
+  success: boolean;
+  prUrl?: string;
+  prNumber?: number;
+  changes?: any;
+  analysis?: any;
   error?: string;
 }
 
@@ -22,7 +23,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!prompt || !repoUrl) {
     return new Response(
       JSON.stringify({
-        status: "error",
+        success: false,
         error: "prompt and repoUrl are required"
       } as WorkflowResponse),
       {
@@ -33,74 +34,25 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    // Start the workflow (returns immediately with run ID)
-    const { runId } = await start(
-      codeModificationWorkflow,
-      [prompt, repoUrl, userEmail]
-    );
+    // Execute the workflow directly
+    const result = await codeModificationWorkflow(prompt, repoUrl, userEmail);
     
-    console.log(`Workflow started with runId: ${runId}`);
+    console.log(`Workflow completed successfully`);
     
     return new Response(
-      JSON.stringify({
-        status: "started",
-        runId,
-        message: "Workflow initiated. Use the runId to check progress."
-      } as WorkflowResponse),
-      {
-        status: 202,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  } catch (error) {
-    console.error("Failed to start workflow:", error);
-    return new Response(
-      JSON.stringify({
-        status: "error",
-        error: (error as Error).message
-      } as WorkflowResponse),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  }
-}
-
-export async function GET(request: Request): Promise<Response> {
-  const { searchParams } = new URL(request.url);
-  const runId = searchParams.get("runId");
-  
-  if (!runId) {
-    return new Response(
-      JSON.stringify({
-        status: "error",
-        error: "runId query parameter is required"
-      }),
-      {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  }
-
-  try {
-    // Get workflow run status from Vercel Workflow SDK
-    const run = await getWorkflowRun(runId);
-    
-    return new Response(
-      JSON.stringify(run),
+      JSON.stringify(result as WorkflowResponse),
       {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }
     );
   } catch (error) {
+    console.error("Workflow failed:", error);
     return new Response(
       JSON.stringify({
-        status: "error",
+        success: false,
         error: (error as Error).message
-      }),
+      } as WorkflowResponse),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
