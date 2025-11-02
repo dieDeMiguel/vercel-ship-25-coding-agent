@@ -1,4 +1,4 @@
-import { codeModificationWorkflow } from './workflows/codeModification';
+import { codeModificationWorkflow } from './workflows/codeModification.js';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });

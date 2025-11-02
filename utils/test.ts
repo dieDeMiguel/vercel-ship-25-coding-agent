@@ -1,4 +1,4 @@
-import { codingAgent } from "./agent";
+import { codingAgent } from "./agent.js";
 import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local" });
