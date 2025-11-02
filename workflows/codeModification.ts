@@ -6,11 +6,11 @@ import {
   notifyUser 
 } from "./steps";
 
-export async function codeModificationWorkflow(
+export const codeModificationWorkflow = async (
   prompt: string, 
   repoUrl: string,
-  userEmail?: string
-) {
+  userEmail: string = ""
+) => {
   "use workflow";
 
   // Step 1: Initialize sandbox with repo (returns only serializable data)
@@ -38,7 +38,7 @@ export async function codeModificationWorkflow(
   );
   
   // Step 5: Optional - notify user (with retry logic built-in)
-  if (userEmail) {
+  if (userEmail && userEmail.trim()) {
     await notifyUser({
       email: userEmail,
       prUrl,
@@ -54,4 +54,4 @@ export async function codeModificationWorkflow(
     changes,
     analysis 
   };
-}
+};

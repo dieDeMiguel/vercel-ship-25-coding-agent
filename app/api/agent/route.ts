@@ -32,9 +32,10 @@ export async function POST(request: Request): Promise<Response> {
   try {
     // Start the workflow using workflow/api
     // ✅ FIX: Use array syntax for arguments (like contact-agent)
+    // ✅ FIX: Pass empty string instead of undefined for userEmail to avoid serialization issues
     const { runId } = await start(
       codeModificationWorkflow,
-      [prompt, repoUrl, userEmail]
+      [prompt, repoUrl, userEmail || ""]
     );
     
     console.log(`Workflow started with runId: ${runId}`);
