@@ -1,5 +1,5 @@
 import { start } from "workflow/api";
-import { codeModificationWorkflow } from "../../../workflows/codeModification.js";
+import { codeModificationWorkflow } from "../../../workflows/codeModification";
 
 interface WorkflowRequest {
   prompt: string;

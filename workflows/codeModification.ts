@@ -4,7 +4,7 @@ import {
   executeChanges,
   createPullRequest,
   notifyUser 
-} from "./steps.js";
+} from "./steps";
 
 export async function codeModificationWorkflow(
   prompt: string, 

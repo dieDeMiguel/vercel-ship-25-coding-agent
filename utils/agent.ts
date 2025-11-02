@@ -7,7 +7,7 @@ import {
   editFile,
   listFiles,
   readFile,
-} from "./sandbox.js";
+} from "./sandbox";
 
 export async function codingAgent(prompt: string, repoUrl?: string) {
   console.log("repoUrl:", repoUrl);

@@ -4,8 +4,8 @@ import {
   createSandbox, 
   listFiles, 
   createPR 
-} from "../utils/sandbox.js";
-import { codingAgent } from "../utils/agent.js";
+} from "../utils/sandbox";
+import { codingAgent } from "../utils/agent";
 
 interface AnalysisResult {
   prompt: string;
