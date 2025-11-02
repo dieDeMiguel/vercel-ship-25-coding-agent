@@ -1,5 +1,5 @@
 import { start } from "workflow/api";
-import { codeModificationWorkflow } from "../workflows/codeModification.js";
+import { codeModificationWorkflow } from "../../../workflows/codeModification.js";
 
 interface WorkflowRequest {
   prompt: string;
@@ -63,3 +63,4 @@ export async function POST(request: Request): Promise<Response> {
     );
   }
 }
+
