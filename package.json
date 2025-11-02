@@ -2,7 +2,7 @@
   "name": "ship-2025-agents-workshop",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "tsx utils/test.ts",
     "test:manual": "tsx test-workflow-manual.ts"
