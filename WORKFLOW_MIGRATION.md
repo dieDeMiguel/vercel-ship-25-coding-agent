@@ -15,13 +15,12 @@ POST /api/agent → Waits for completion → Returns result
 
 ### After (Workflow SDK)
 ```
-POST /api/agent → Returns runId immediately (HTTP 202)
-GET /api/agent?runId=XXX → Check status
+POST /api/agent → Executes workflow → Returns result
 ```
-- 5-step workflow with state persistence
-- Unlimited runtime (no timeout)
-- Automatic retries with exponential backoff
-- Full observability in Vercel Dashboard
+- 5-step workflow with automatic state management
+- Long-running execution (up to 5 minutes per step)
+- Automatic retries with `FatalError` and `RetryableError`
+- Full observability and step isolation
 
 ## Workflow Steps
 
@@ -70,34 +69,25 @@ VERCEL_OIDC_TOKEN=auto_pulled_by_vercel_cli
 
 ## API Usage
 
-### Start Workflow
+### Execute Workflow
 ```bash
 curl -X POST https://your-app.vercel.app/api/agent \
   -H "Content-Type: application/json" \
   -d '{
-    "prompt": "Add footer to homepage",
-    "repoUrl": "https://github.com/user/repo"
+    "prompt": "Add README section",
+    "repoUrl": "https://github.com/user/repo",
+    "userEmail": "you@example.com"
   }'
-
-# Response (HTTP 202)
-{
-  "status": "started",
-  "runId": "run_123...",
-  "message": "Workflow initiated..."
-}
 ```
 
-### Check Status
-```bash
-curl https://your-app.vercel.app/api/agent?runId=run_123...
-
-# Response
+Response:
+```json
 {
-  "status": "completed",
-  "result": {
-    "prUrl": "https://github.com/user/repo/pull/1",
-    "prNumber": 1
-  }
+  "success": true,
+  "prUrl": "https://github.com/user/repo/pull/1",
+  "prNumber": 1,
+  "changes": { "filesModified": ["app/page.tsx"] },
+  "analysis": { "suggestedFiles": ["app/page.tsx"] }
 }
 ```
 

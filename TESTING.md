@@ -23,7 +23,7 @@ pnpm run test:manual
 
 Shows step-by-step progress in terminal with all logs. Edit `test-workflow-manual.ts` to customize the prompt and repository.
 
-### Method 2: Production API + Vercel Dashboard
+### Method 2: Production API
 
 Deploy and test the live API:
 
@@ -38,16 +38,9 @@ curl -X POST https://your-app.vercel.app/api/agent \
     "prompt": "Add README section",
     "repoUrl": "https://github.com/user/repo"
   }'
-
-# Check status
-curl https://your-app.vercel.app/api/agent?runId=<runId>
 ```
 
-**View in Vercel Dashboard:**
-- Go to your project in Vercel
-- Click **Workflows** tab (if available)
-- See step-by-step execution timeline
-- View detailed logs and errors
+The workflow will execute and return the full result including the PR URL.
 
 ### Method 3: Without Test File
 
