@@ -39,8 +39,9 @@ export async function codingAgent(prompt: string, repoUrl?: string) {
             const output = await readFile(sandbox, path);
             return { path, output };
           } catch (error) {
-            console.error(`Error reading file at ${path}:`, error.message);
-            return { path, error: error.message };
+            const err = error as Error;
+            console.error(`Error reading file at ${path}:`, err.message);
+            return { path, error: err.message };
           }
         },
       }),
@@ -69,8 +70,9 @@ export async function codingAgent(prompt: string, repoUrl?: string) {
             const output = await listFiles(sandbox, path);
             return { path, output };
           } catch (e) {
-            console.error(`Error listing files:`, e);
-            return { error: e };
+            const err = e as Error;
+            console.error(`Error listing files:`, err.message);
+            return { error: err.message };
           }
         },
       }),
@@ -97,8 +99,9 @@ export async function codingAgent(prompt: string, repoUrl?: string) {
             await editFile(sandbox, path, old_str, new_str);
             return { success: true };
           } catch (e) {
-            console.error(`Error editing file ${path}:`, e);
-            return { error: e };
+            const err = e as Error;
+            console.error(`Error editing file ${path}:`, err.message);
+            return { error: err.message };
           }
         },
       }),
@@ -132,8 +135,9 @@ export async function codingAgent(prompt: string, repoUrl?: string) {
             console.log(`PR created successfully: ${result.pr_url}`);
             return { success: true, linkToPR: result.pr_url }; 
           } catch (error) {
-            console.error(`Error creating PR:`, error.message);
-            return { error: error.message };
+            const err = error as Error;
+            console.error(`Error creating PR:`, err.message);
+            return { error: err.message };
           }
         }, 
       }), 
