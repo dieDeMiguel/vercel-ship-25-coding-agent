@@ -1,0 +1,9 @@
+{
+  "/.well-known/workflow/v1/flow/route": "/.well-known/workflow/v1/flow",
+  "/.well-known/workflow/v1/step/route": "/.well-known/workflow/v1/step",
+  "/.well-known/workflow/v1/webhook/[token]/route": "/.well-known/workflow/v1/webhook/[token]",
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/api/agent/route": "/api/agent",
+  "/page": "/"
+}

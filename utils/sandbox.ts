@@ -229,11 +229,13 @@ export const createPR = async (
         throw new Error(result.message || "Failed to create PR");
       }
     } catch (apiError) {
-      console.error(`Error during GitHub API call:`, apiError);
-      throw new Error(`Failed to create PR via API: ${apiError.message}`);
+      const err = apiError as Error;
+      console.error(`Error during GitHub API call:`, err);
+      throw new Error(`Failed to create PR via API: ${err.message}`);
     }
   } catch (error) {
-    console.error(`Error in createPR:`, error);
-    return { error: error.message };
+    const err = error as Error;
+    console.error(`Error in createPR:`, err);
+    return { error: err.message };
   }
 };
