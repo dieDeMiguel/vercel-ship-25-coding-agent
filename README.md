@@ -49,17 +49,18 @@ curl -X POST https://your-deployment.vercel.app/api/agent \
 Response:
 ```json
 {
-  "status": "started",
-  "runId": "run_1735689123456_abc123def",
-  "message": "Workflow initiated. Use the runId to check progress."
+  "runId": "run_abc123xyz",
+  "message": "Workflow started. Track progress in Vercel Dashboard under Workflows tab."
 }
 ```
 
-### Check Workflow Status
+### Track Workflow Progress
 
-```bash
-curl https://your-deployment.vercel.app/api/agent?runId=run_1735689123456_abc123def
-```
+Go to **Vercel Dashboard → Project → Workflows** tab to:
+- See real-time execution of each step
+- View detailed logs
+- Monitor sandbox operations
+- Check PR creation status
 
 ## Architecture
 

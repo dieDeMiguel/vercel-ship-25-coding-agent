@@ -15,12 +15,13 @@ POST /api/agent → Waits for completion → Returns result
 
 ### After (Workflow SDK)
 ```
-POST /api/agent → Executes workflow → Returns result
+POST /api/agent → Returns runId (HTTP 202) → Track in Dashboard
 ```
 - 5-step workflow with automatic state management
+- Async execution (doesn't block the API response)
+- Automatic retries with exponential backoff
+- **Full observability in Vercel Workflows Dashboard**
 - Long-running execution (up to 5 minutes per step)
-- Automatic retries with `FatalError` and `RetryableError`
-- Full observability and step isolation
 
 ## Workflow Steps
 
@@ -80,16 +81,20 @@ curl -X POST https://your-app.vercel.app/api/agent \
   }'
 ```
 
-Response:
+Response (HTTP 202):
 ```json
 {
-  "success": true,
-  "prUrl": "https://github.com/user/repo/pull/1",
-  "prNumber": 1,
-  "changes": { "filesModified": ["app/page.tsx"] },
-  "analysis": { "suggestedFiles": ["app/page.tsx"] }
+  "runId": "run_abc123xyz",
+  "message": "Workflow started. Track progress in Vercel Dashboard under Workflows tab."
 }
 ```
+
+**Track Progress:**
+- Go to Vercel Dashboard → Your Project → **Workflows** tab
+- Find your workflow run by `runId`
+- View real-time step execution
+- See detailed logs and errors
+- Check final PR URL when complete
 
 ## Deployment
 
