@@ -34,7 +34,7 @@ async function notifyUser(data) {
 __name(notifyUser, "notifyUser");
 
 // workflows/codeModification.ts
-var codeModificationWorkflow = /* @__PURE__ */ __name(async (prompt, repoUrl, userEmail = "") => {
+var codeModificationWorkflow = /* @__PURE__ */ __name(async (prompt, repoUrl, userEmail) => {
   const { repoUrl: validatedRepoUrl, repoInfo } = await initializeSandbox(repoUrl);
   const { filesToModify, analysis } = await analyzeRepository(validatedRepoUrl, prompt, repoInfo);
   const { changes, branch } = await executeChanges(validatedRepoUrl, prompt, filesToModify);

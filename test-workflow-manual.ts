@@ -11,7 +11,7 @@ async function manualTest() {
   const testConfig = {
     prompt: "Add a footer to the homepage that says 'Tested manually'",
     repoUrl: "https://github.com/dieDeMiguel/blinkist-starter-kit",
-    userEmail: undefined // Optional: add your email to test notifications
+    userEmail: "" // Pass empty string instead of undefined
   };
   
   console.log('Test Configuration:');

@@ -9,7 +9,7 @@ import {
 export const codeModificationWorkflow = async (
   prompt: string, 
   repoUrl: string,
-  userEmail: string = ""
+  userEmail: string
 ) => {
   "use workflow";
 
