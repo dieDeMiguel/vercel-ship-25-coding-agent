@@ -159,8 +159,9 @@ export const createPR = async (
       const pushOutput = await pushResult.output();
       console.log(`Push result: ${pushOutput}`);
     } catch (pushError) {
-      console.error(`Error during git push:`, pushError);
-      throw new Error(`Failed to push branch: ${pushError.message}`);
+      const err = pushError as Error;
+      console.error(`Error during git push:`, err);
+      throw new Error(`Failed to push branch: ${err.message}`);
     }
 
     // Create PR via GitHub API

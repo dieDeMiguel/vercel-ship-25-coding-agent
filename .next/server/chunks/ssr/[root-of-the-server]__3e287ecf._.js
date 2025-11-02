@@ -1,0 +1,3 @@
+module.exports=[93695,(a,b,c)=>{b.exports=a.x("next/dist/shared/lib/no-fallback-error.external.js",()=>require("next/dist/shared/lib/no-fallback-error.external.js"))},70864,a=>{a.n(a.i(33290))},87845,a=>{a.n(a.i(45043))},6187,a=>{a.n(a.i(72013))},49386,a=>{a.n(a.i(39730))},50708,a=>{"use strict";var b=a.i(15596);function c(){return(0,b.jsxs)("main",{className:"p-8",children:[(0,b.jsx)("h1",{className:"text-2xl font-bold",children:"AI Coding Agent with Workflows"}),(0,b.jsxs)("p",{className:"mt-4",children:["Send POST requests to ",(0,b.jsx)("code",{children:"/api/agent"})," to trigger the workflow."]})]})}a.s(["default",()=>c])}];
+
+//# sourceMappingURL=%5Broot-of-the-server%5D__3e287ecf._.js.map
