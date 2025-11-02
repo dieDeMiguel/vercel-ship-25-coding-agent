@@ -10,7 +10,7 @@ export const createSandbox = async (repoUrl: string) => {
       type: "git",
     },
     resources: { vcpus: 2 },
-    timeout: ms("1m"),
+    timeout: ms("5m"), // Increased from 1m to 5m for git operations
     ports: [3000],
     runtime: "node22",
   });
@@ -154,9 +154,14 @@ export const createPR = async (
     await sandbox.runCommand("git", ["commit", "-m", title]);
     
     console.log(`Pushing to branch: ${branchName}`);
-    const pushResult = await sandbox.runCommand("git", ["push", "origin", branchName]);
-    const pushOutput = await pushResult.output();
-    console.log(`Push result: ${pushOutput}`);
+    try {
+      const pushResult = await sandbox.runCommand("git", ["push", "origin", branchName]);
+      const pushOutput = await pushResult.output();
+      console.log(`Push result: ${pushOutput}`);
+    } catch (pushError) {
+      console.error(`Error during git push:`, pushError);
+      throw new Error(`Failed to push branch: ${pushError.message}`);
+    }
 
     // Create PR via GitHub API
     console.log("Creating PR via GitHub API...");
@@ -164,41 +169,67 @@ export const createPR = async (
     if (!urlMatch) throw new Error("Invalid GitHub repository URL");
 
     const [, owner, repo] = urlMatch;
-    const prData = { title, body, head: branchName, base: "main" };
+    
+    // Get the default branch of the repository
+    console.log("Getting repository information...");
+    let defaultBranch = "main"; // fallback
+    try {
+      const repoInfoResponse = await sandbox.runCommand("curl", [
+        "-s",
+        "-H",
+        `Authorization: token ${process.env.GITHUB_TOKEN}`,
+        "-H",
+        "Accept: application/vnd.github.v3+json",
+        `https://api.github.com/repos/${owner}/${repo}`,
+      ]);
+      const repoInfoOutput = await repoInfoResponse.output();
+      const repoInfo = JSON.parse(repoInfoOutput.toString());
+      defaultBranch = repoInfo.default_branch || "main";
+      console.log(`Repository default branch: ${defaultBranch}`);
+    } catch (repoInfoError) {
+      console.warn(`Could not get repository info, using 'main' as default branch:`, repoInfoError);
+    }
+    
+    const prData = { title, body, head: branchName, base: defaultBranch };
     
     console.log(`Creating PR for ${owner}/${repo} with data:`, prData);
 
-    const response = await sandbox.runCommand("curl", [
-      "-s",
-      "-X",
-      "POST",
-      "-H",
-      `Authorization: token ${process.env.GITHUB_TOKEN}`,
-      "-H",
-      "Accept: application/vnd.github.v3+json",
-      "-H",
-      "Content-Type: application/json",
-      "-d",
-      JSON.stringify(prData),
-      `https://api.github.com/repos/${owner}/${repo}/pulls`,
-    ]);
+    try {
+      const response = await sandbox.runCommand("curl", [
+        "-s",
+        "-X",
+        "POST",
+        "-H",
+        `Authorization: token ${process.env.GITHUB_TOKEN}`,
+        "-H",
+        "Accept: application/vnd.github.v3+json",
+        "-H",
+        "Content-Type: application/json",
+        "-d",
+        JSON.stringify(prData),
+        `https://api.github.com/repos/${owner}/${repo}/pulls`,
+      ]);
 
-    const responseOutput = await response.output();
-    console.log(`GitHub API response: ${responseOutput}`);
-    
-    const result = JSON.parse(responseOutput.toString());
+      const responseOutput = await response.output();
+      console.log(`GitHub API response: ${responseOutput}`);
+      
+      const result = JSON.parse(responseOutput.toString());
 
-    if (result.html_url) {
-      console.log(`PR created successfully: ${result.html_url}`);
-      return {
-        success: true,
-        branch: branchName,
-        pr_url: result.html_url,
-        pr_number: result.number,
-      };
-    } else {
-      console.error(`Failed to create PR. GitHub API response:`, result);
-      throw new Error(result.message || "Failed to create PR");
+      if (result.html_url) {
+        console.log(`PR created successfully: ${result.html_url}`);
+        return {
+          success: true,
+          branch: branchName,
+          pr_url: result.html_url,
+          pr_number: result.number,
+        };
+      } else {
+        console.error(`Failed to create PR. GitHub API response:`, result);
+        throw new Error(result.message || "Failed to create PR");
+      }
+    } catch (apiError) {
+      console.error(`Error during GitHub API call:`, apiError);
+      throw new Error(`Failed to create PR via API: ${apiError.message}`);
     }
   } catch (error) {
     console.error(`Error in createPR:`, error);

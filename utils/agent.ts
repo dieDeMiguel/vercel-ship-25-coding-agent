@@ -30,7 +30,12 @@ export async function codingAgent(prompt: string, repoUrl?: string) {
         }),
         execute: async ({ path }) => {
           try {
-            if (!sandbox) sandbox = await createSandbox(repoUrl!);
+            if (!sandbox) {
+              if (!repoUrl) {
+                return { path, error: "Repository URL not provided" };
+              }
+              sandbox = await createSandbox(repoUrl);
+            }
             const output = await readFile(sandbox, path);
             return { path, output };
           } catch (error) {
@@ -55,7 +60,12 @@ export async function codingAgent(prompt: string, repoUrl?: string) {
             return { error: "You cannot read the path: ", path };
           }
           try {
-            if (!sandbox) sandbox = await createSandbox(repoUrl!);
+            if (!sandbox) {
+              if (!repoUrl) {
+                return { path, error: "Repository URL not provided" };
+              }
+              sandbox = await createSandbox(repoUrl);
+            }
             const output = await listFiles(sandbox, path);
             return { path, output };
           } catch (e) {
@@ -78,7 +88,12 @@ export async function codingAgent(prompt: string, repoUrl?: string) {
         }),
         execute: async ({ path, old_str, new_str }) => {
           try {
-            if (!sandbox) sandbox = await createSandbox(repoUrl!);
+            if (!sandbox) {
+              if (!repoUrl) {
+                return { path, error: "Repository URL not provided" };
+              }
+              sandbox = await createSandbox(repoUrl);
+            }
             await editFile(sandbox, path, old_str, new_str);
             return { success: true };
           } catch (e) {
