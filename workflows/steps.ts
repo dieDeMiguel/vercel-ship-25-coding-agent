@@ -1,4 +1,4 @@
-import { FatalError } from "workflow";
+import { FatalError, RetryableError, sleep } from "workflow";
 import type { Sandbox } from "@vercel/sandbox";
 import { 
   createSandbox, 
@@ -33,24 +33,54 @@ interface NotificationData {
 export async function initializeSandbox(repoUrl: string) {
   "use step";
   
-  try {
-    console.log(`Initializing sandbox for repository: ${repoUrl}`);
-    const sandbox = await createSandbox(repoUrl);
-    
-    const repoInfoResult = await sandbox.runCommand("git", ["remote", "-v"]);
-    const repoInfo = await repoInfoResult.output();
-    
-    console.log(`Sandbox initialized successfully`);
-    console.log(`Repository info: ${repoInfo}`);
-    
-    return { 
-      sandbox, 
-      repoInfo: repoInfo.toString() 
-    };
-  } catch (error) {
-    console.error(`Failed to initialize sandbox: ${(error as Error).message}`);
-    throw new FatalError(`Failed to initialize sandbox: ${(error as Error).message}`);
+  const maxRetries = 3;
+  let lastError: Error | null = null;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Initializing sandbox for repository: ${repoUrl} (attempt ${attempt}/${maxRetries})`);
+      const sandbox = await createSandbox(repoUrl);
+      
+      const repoInfoResult = await sandbox.runCommand("git", ["remote", "-v"]);
+      const repoInfo = await repoInfoResult.output();
+      
+      console.log(`Sandbox initialized successfully on attempt ${attempt}`);
+      console.log(`Repository info: ${repoInfo}`);
+      
+      return { 
+        sandbox, 
+        repoInfo: repoInfo.toString() 
+      };
+    } catch (error) {
+      lastError = error as Error;
+      console.error(`Attempt ${attempt}/${maxRetries} failed: ${lastError.message}`);
+      
+      // If it's a 400 error (likely auth/quota issue), don't retry
+      if (lastError.message.includes('400')) {
+        throw new FatalError(
+          `Sandbox initialization failed with 400 error. ` +
+          `This is likely due to: ` +
+          `1) Missing VERCEL_OIDC_TOKEN, ` +
+          `2) Sandbox quota exceeded, or ` +
+          `3) Invalid repository URL. ` +
+          `Error: ${lastError.message}`
+        );
+      }
+      
+      // For other errors, retry with exponential backoff
+      if (attempt < maxRetries) {
+        const waitTime = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+        console.log(`Waiting ${waitTime}ms before retry...`);
+        await sleep(waitTime);
+      }
+    }
   }
+  
+  // All retries exhausted
+  throw new FatalError(
+    `Failed to initialize sandbox after ${maxRetries} attempts. ` +
+    `Last error: ${lastError?.message}`
+  );
 }
 
 export async function analyzeRepository(
