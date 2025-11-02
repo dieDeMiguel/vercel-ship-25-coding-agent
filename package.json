@@ -12,8 +12,10 @@
   "license": "ISC",
   "devDependencies": {
     "@types/ms": "^2.1.0",
+    "@types/next": "^9.0.0",
     "@types/node": "^22.15.30",
     "dotenv": "^16.4.7",
+    "next": "^16.0.1",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3"
   },

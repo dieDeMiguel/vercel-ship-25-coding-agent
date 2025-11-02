@@ -1,3 +1,4 @@
+import { start } from "workflow/api";
 import { codeModificationWorkflow } from "../workflows/codeModification.js";
 
 interface WorkflowRequest {
@@ -7,12 +8,8 @@ interface WorkflowRequest {
 }
 
 interface WorkflowResponse {
-  success: boolean;
-  prUrl?: string;
-  prNumber?: number;
-  changes?: any;
-  analysis?: any;
-  error?: string;
+  runId: string;
+  message: string;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -23,9 +20,8 @@ export async function POST(request: Request): Promise<Response> {
   if (!prompt || !repoUrl) {
     return new Response(
       JSON.stringify({
-        success: false,
         error: "prompt and repoUrl are required"
-      } as WorkflowResponse),
+      }),
       {
         status: 400,
         headers: { "Content-Type": "application/json" },
@@ -34,25 +30,32 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    // Execute the workflow directly
-    const result = await codeModificationWorkflow(prompt, repoUrl, userEmail);
+    // Start the workflow using workflow/api
+    const { runId } = await start(
+      codeModificationWorkflow,
+      prompt,
+      repoUrl,
+      userEmail
+    );
     
-    console.log(`Workflow completed successfully`);
+    console.log(`Workflow started with runId: ${runId}`);
     
     return new Response(
-      JSON.stringify(result as WorkflowResponse),
+      JSON.stringify({
+        runId,
+        message: `Workflow started. Track progress in Vercel Dashboard under Workflows tab.`
+      } as WorkflowResponse),
       {
-        status: 200,
+        status: 202,
         headers: { "Content-Type": "application/json" },
       }
     );
   } catch (error) {
-    console.error("Workflow failed:", error);
+    console.error("Failed to start workflow:", error);
     return new Response(
       JSON.stringify({
-        success: false,
         error: (error as Error).message
-      } as WorkflowResponse),
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
