@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --primary: 0 0% 98%;
+    --secondary: 0 0% 15%;
+    --muted: 0 0% 9%;
+    --accent: 0 0% 15%;
+  }
+
+  * {
+    @apply border-[#262626];
+  }
+
+  body {
+    @apply bg-black text-white font-sans antialiased;
+  }
+
+  code,
+  pre,
+  kbd,
+  samp {
+    @apply font-mono;
+  }
+}
