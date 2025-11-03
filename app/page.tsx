@@ -144,7 +144,7 @@ export default function Home() {
               type="password"
               value={githubToken}
               onChange={(e) => setGithubToken(e.target.value)}
-              placeholder="github_pat_11ANI6W4A0MeQIcWSnqF7a_Izxlvmo5IV..."
+              placeholder="github_pat_33BNI6W4A0MeQIcWSnqF7a_Izxlvmo5IV..."
               className={cn(
                 "w-full px-4 py-3 bg-[#111] border border-[#333] rounded-lg",
                 "text-white placeholder:text-gray-600 font-mono text-sm",
