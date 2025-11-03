@@ -69,7 +69,7 @@ export default function Home() {
     }
   };
 
-  const canSubmit = repoUrl && instruction && githubToken && isValidUrl(repoUrl) && !loading;
+  const canSubmit = repoUrl && instruction && githubToken && isValidUrl(repoUrl) && !loading && !result;
 
   const handleReset = () => {
     setResult(null);
