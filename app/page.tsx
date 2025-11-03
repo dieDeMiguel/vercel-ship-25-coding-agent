@@ -10,8 +10,8 @@ interface WorkflowResult {
 }
 
 export default function Home() {
-  const [repoUrl, setRepoUrl] = useState("");
-  const [instruction, setInstruction] = useState("");
+  const [repoUrl, setRepoUrl] = useState("https://github.com/dieDeMiguel/blinkist-starter-kit");
+  const [instruction, setInstruction] = useState("Add a footer component with dark mode support...");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WorkflowResult | null>(null);
 
@@ -144,6 +144,7 @@ export default function Home() {
             {loading ? (
               <span className="flex items-center justify-center gap-2 font-mono">
                 <svg
+                  aria-hidden="true"
                   className="animate-spin h-4 w-4"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -182,31 +183,30 @@ export default function Home() {
             )}
           >
             {result.error ? (
-              <>
-                <div className="flex items-start gap-3">
-                  <svg
-                    className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-red-400">
-                      Workflow Failed
-                    </p>
-                    <p className="text-xs text-red-300/80 font-mono">
-                      {result.error}
-                    </p>
-                  </div>
+              <div className="flex items-start gap-3">
+                <svg
+                  className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-red-400">
+                    Workflow Failed
+                  </p>
+                  <p className="text-xs text-red-300/80 font-mono">
+                    {result.error}
+                  </p>
                 </div>
-              </>
+              </div>
             ) : (
               <>
                 <div className="flex items-start gap-3">
@@ -215,6 +215,7 @@ export default function Home() {
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
+                    aria-hidden="true"
                   >
                     <path
                       strokeLinecap="round"
