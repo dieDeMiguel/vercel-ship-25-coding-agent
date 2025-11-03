@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface WorkflowResult {
   runId: string;
@@ -63,7 +69,8 @@ export default function Home() {
   const canSubmit = repoUrl && instruction && githubToken && isValidUrl(repoUrl) && !loading;
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-4 bg-black">
+    <TooltipProvider>
+      <main className="min-h-screen flex items-center justify-center p-4 bg-black">
       <div className="w-full max-w-2xl space-y-8">
         {/* Header */}
         <div className="space-y-2 text-center">
@@ -133,12 +140,57 @@ export default function Home() {
 
           {/* GitHub Token Input */}
           <div className="space-y-2">
-            <label
-              htmlFor="github-token"
-              className="block text-xs font-medium text-gray-400 uppercase tracking-wider font-mono"
-            >
-              GitHub Token
-            </label>
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="github-token"
+                className="block text-xs font-medium text-gray-400 uppercase tracking-wider font-mono"
+              >
+                GitHub Token
+              </label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="text-gray-500 hover:text-gray-300 transition-colors"
+                    aria-label="GitHub token help"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-sm p-4 space-y-3">
+                  <p className="font-semibold text-white">Set up GitHub Personal Access Token</p>
+                  <ol className="space-y-2 text-xs list-decimal list-inside">
+                    <li>Go to github.com/settings/personal-access-tokens</li>
+                    <li>Click "Generate new token"</li>
+                    <li>Give it a descriptive name</li>
+                    <li>Set repository access to "All repositories"</li>
+                    <li className="space-y-1">
+                      <span>Add repository permissions:</span>
+                      <ul className="list-disc list-inside pl-4 space-y-1">
+                        <li>Issues: Read and write</li>
+                        <li>Pull requests: Read and write</li>
+                        <li>Contents: Read and write</li>
+                      </ul>
+                    </li>
+                    <li>Click "Generate token"</li>
+                    <li>Copy the token immediately</li>
+                  </ol>
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <input
               id="github-token"
               type="password"
@@ -305,5 +357,6 @@ export default function Home() {
         </div>
       </div>
     </main>
+    </TooltipProvider>
   );
 }

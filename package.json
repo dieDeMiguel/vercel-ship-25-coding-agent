@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@radix-ui/react-tooltip": "^1.2.8",
     "@vercel/sandbox": "^0.0.10",
     "ai": "^5.0.81",
     "class-variance-authority": "^0.7.1",
