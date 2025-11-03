@@ -23,6 +23,10 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent multiple submissions
+    if (loading) return;
+    
     setLoading(true);
     setResult(null);
 
@@ -66,6 +70,13 @@ export default function Home() {
   };
 
   const canSubmit = repoUrl && instruction && githubToken && isValidUrl(repoUrl) && !loading;
+
+  const handleReset = () => {
+    setResult(null);
+    setRepoUrl("");
+    setInstruction("");
+    setGithubToken("");
+  };
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4 bg-black">
@@ -270,29 +281,38 @@ export default function Home() {
             )}
           >
             {result.error ? (
-              <div className="flex items-start gap-3">
-                <svg
-                  className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-red-400">
-                    Workflow Failed
-                  </p>
-                  <p className="text-xs text-red-300/80 font-mono">
-                    {result.error}
-                  </p>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <svg
+                    className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-red-400">
+                      Workflow Failed
+                    </p>
+                    <p className="text-xs text-red-300/80 font-mono">
+                      {result.error}
+                    </p>
+                  </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="w-full text-center text-xs text-gray-400 hover:text-white transition-colors font-mono py-2 border border-[#333] rounded hover:border-red-500/50"
+                >
+                  Try Again
+                </button>
               </div>
             ) : (
               <>
@@ -341,6 +361,16 @@ export default function Home() {
                       View in Vercel Dashboard →
                     </a>
                   </div>
+                )}
+                
+                {!result.error && (
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="w-full text-center text-xs text-gray-400 hover:text-white transition-colors font-mono py-2 border border-[#333] rounded hover:border-[#555]"
+                  >
+                    Start New Workflow
+                  </button>
                 )}
               </>
             )}
