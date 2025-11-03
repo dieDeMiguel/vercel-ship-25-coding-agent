@@ -99,6 +99,7 @@ export function WorkflowProgress({ runId, onComplete }: WorkflowProgressProps) {
                   >
                     {isCompleted && (
                       <svg
+                        aria-hidden="true"
                         className="w-4 h-4 text-green-400"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -171,16 +172,6 @@ export function WorkflowProgress({ runId, onComplete }: WorkflowProgressProps) {
           {(totalDuration / 1000).toFixed(1)}s
         </span>
       </div>
-
-      {/* Link to Vercel Dashboard */}
-      <a
-        href={`https://vercel.com/dashboard`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block text-center text-xs text-gray-400 hover:text-white transition-colors font-mono py-3 border border-[#333] rounded hover:border-[#555]"
-      >
-        View detailed logs in Vercel Dashboard →
-      </a>
     </div>
   );
 }

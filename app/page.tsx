@@ -350,15 +350,6 @@ export default function Home() {
                         {result.runId}
                       </code>
                     </div>
-                    
-                    <a
-                      href="https://vercel.com/dashboard"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block text-center text-xs text-gray-400 hover:text-white transition-colors font-mono py-2 border border-[#333] rounded hover:border-[#555]"
-                    >
-                      View in Vercel Dashboard →
-                    </a>
                   </div>
                 )}
                 
