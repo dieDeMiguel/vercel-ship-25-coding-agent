@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
@@ -69,8 +68,7 @@ export default function Home() {
   const canSubmit = repoUrl && instruction && githubToken && isValidUrl(repoUrl) && !loading;
 
   return (
-    <TooltipProvider>
-      <main className="min-h-screen flex items-center justify-center p-4 bg-black">
+    <main className="min-h-screen flex items-center justify-center p-4 bg-black">
       <div className="w-full max-w-2xl space-y-8">
         {/* Header */}
         <div className="space-y-2 text-center">
@@ -357,6 +355,5 @@ export default function Home() {
         </div>
       </div>
     </main>
-    </TooltipProvider>
   );
 }
