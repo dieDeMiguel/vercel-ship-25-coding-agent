@@ -33,14 +33,17 @@ export async function initializeSandbox(repoUrl: string) {
   "use step";
   
   try {
-    console.log(`Initializing sandbox for repository: ${repoUrl}`);
+    console.log(`🚀 [STEP 1/4] Initializing sandbox for repository: ${repoUrl}`);
+    console.log(`⏳ Creating isolated sandbox environment...`);
     const sandbox = await createSandbox(repoUrl);
     
+    console.log(`✓ Sandbox created successfully`);
+    console.log(`📦 Cloning repository...`);
     const repoInfoResult = await sandbox.runCommand("git", ["remote", "-v"]);
     const repoInfo = await repoInfoResult.output();
     
-    console.log(`Sandbox initialized successfully`);
-    console.log(`Repository info: ${repoInfo}`);
+    console.log(`✓ Repository cloned successfully`);
+    console.log(`📋 Repository info:\n${repoInfo}`);
     
     // ✅ FIX: Only return serializable data (strings), not the Sandbox instance
     return { 
@@ -76,15 +79,19 @@ export async function analyzeRepository(
   "use step";
   
   try {
-    console.log(`Analyzing repository structure for prompt: "${prompt}"`);
+    console.log(`🔍 [STEP 2/4] Analyzing repository structure`);
+    console.log(`📝 Task: "${prompt}"`);
     
     // ✅ FIX: Recreate sandbox from repoUrl instead of receiving instance
+    console.log(`⏳ Reconnecting to sandbox...`);
     const sandbox = await createSandbox(repoUrl);
     
     // List root directory to understand project structure
+    console.log(`📂 Scanning repository structure...`);
     const rootFiles = await listFiles(sandbox, ".");
     
     // Determine likely files to modify based on prompt keywords
+    console.log(`🎯 Identifying target files based on task...`);
     const filesToModify = determineFilesToModify(prompt);
     
     const analysis: AnalysisResult = {
@@ -95,7 +102,8 @@ export async function analyzeRepository(
       timestamp: new Date().toISOString()
     };
     
-    console.log(`Repository analysis complete. Suggested files to modify:`, filesToModify);
+    console.log(`✓ Analysis complete`);
+    console.log(`📁 Suggested files to modify: ${filesToModify.join(", ")}`);
     
     return { 
       filesToModify, 
@@ -121,17 +129,21 @@ export async function executeChanges(
   "use step";
   
   try {
-    console.log(`Executing AI-driven changes for: "${prompt}"`);
-    console.log(`Target files: ${filesToModify.join(", ")}`);
+    console.log(`🤖 [STEP 3/4] Executing AI-driven code modifications`);
+    console.log(`📝 Task: "${prompt}"`);
+    console.log(`🎯 Target files: ${filesToModify.join(", ")}`);
     
     // ✅ FIX: Recreate sandbox from repoUrl
+    console.log(`⏳ Reconnecting to sandbox...`);
     const sandbox = await createSandbox(repoUrl);
     
     // Run the coding agent to determine and execute changes
     // Pass repoUrl and githubToken so agent can access repository files and create PRs
+    console.log(`🧠 Invoking AI agent with GPT-4...`);
     const { response } = await codingAgent(prompt, repoUrl, githubToken);
     
-    console.log(`AI agent response: ${response}`);
+    console.log(`✓ AI agent completed`);
+    console.log(`📋 Agent summary: ${response}`);
     
     // Commit the changes
     const branch = `ai-change-${Date.now()}`;
@@ -175,9 +187,11 @@ export async function createPullRequest(
   "use step";
   
   try {
-    console.log(`Creating pull request for branch: ${branch}`);
+    console.log(`🔀 [STEP 4/4] Creating pull request`);
+    console.log(`🌿 Branch: ${branch}`);
     
     // ✅ FIX: Recreate sandbox from repoUrl
+    console.log(`⏳ Reconnecting to sandbox...`);
     const sandbox = await createSandbox(repoUrl);
     
     const prDetails = {
@@ -186,13 +200,15 @@ export async function createPullRequest(
       branch: branch
     };
     
+    console.log(`📤 Pushing changes to GitHub...`);
     const result = await createPR(sandbox, repoUrl, prDetails, githubToken);
     
     if (result.error) {
       throw new Error(result.error);
     }
     
-    console.log(`Pull request created successfully: ${result.pr_url}`);
+    console.log(`✓ Pull request created successfully!`);
+    console.log(`🔗 PR URL: ${result.pr_url}`);
     
     return { 
       prUrl: result.pr_url, 
