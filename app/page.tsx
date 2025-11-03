@@ -12,6 +12,7 @@ interface WorkflowResult {
 export default function Home() {
   const [repoUrl, setRepoUrl] = useState("https://github.com/dieDeMiguel/blinkist-starter-kit");
   const [instruction, setInstruction] = useState("Add a footer component with dark mode support...");
+  const [githubToken, setGithubToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WorkflowResult | null>(null);
 
@@ -28,6 +29,7 @@ export default function Home() {
           prompt: instruction,
           repoUrl: repoUrl,
           userEmail: "",
+          githubToken: githubToken,
         }),
       });
 
@@ -58,7 +60,7 @@ export default function Home() {
     }
   };
 
-  const canSubmit = repoUrl && instruction && isValidUrl(repoUrl) && !loading;
+  const canSubmit = repoUrl && instruction && githubToken && isValidUrl(repoUrl) && !loading;
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4 bg-black">
@@ -127,6 +129,41 @@ export default function Home() {
               )}
               required
             />
+          </div>
+
+          {/* GitHub Token Input */}
+          <div className="space-y-2">
+            <label
+              htmlFor="github-token"
+              className="block text-xs font-medium text-gray-400 uppercase tracking-wider font-mono"
+            >
+              GitHub Token
+            </label>
+            <input
+              id="github-token"
+              type="password"
+              value={githubToken}
+              onChange={(e) => setGithubToken(e.target.value)}
+              placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              className={cn(
+                "w-full px-4 py-3 bg-[#111] border border-[#333] rounded-lg",
+                "text-white placeholder:text-gray-600 font-mono text-sm",
+                "focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent",
+                "transition-all duration-200"
+              )}
+              required
+            />
+            <p className="text-xs text-gray-500 font-mono">
+              Required for creating PRs and pushing changes.{" "}
+              <a
+                href="https://github.com/settings/tokens/new?scopes=repo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white underline transition-colors"
+              >
+                Generate token →
+              </a>
+            </p>
           </div>
 
           {/* Submit Button */}

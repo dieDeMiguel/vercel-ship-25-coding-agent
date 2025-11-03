@@ -74,10 +74,11 @@ export const createPR = async (
   sandbox: Sandbox,
   repoUrl: string,
   prDetails: { title: string; body: string; branch: string | null },
+  githubToken: string
 ) => {
   try {
-    if (!process.env.GITHUB_TOKEN)
-      throw new Error("GITHUB_TOKEN environment variable is required");
+    if (!githubToken)
+      throw new Error("GitHub token is required for creating PRs");
 
     const { title, body, branch } = prDetails;
     console.log(`Creating PR with title: ${title}, body: ${body}, branch: ${branch}`);
@@ -95,7 +96,7 @@ export const createPR = async (
 
     const authUrl = repoUrl!.replace(
       "https://github.com/",
-      `https://${process.env.GITHUB_TOKEN}@github.com/`,
+      `https://${githubToken}@github.com/`,
     );
     await sandbox.runCommand("git", ["remote", "set-url", "origin", authUrl]);
 
@@ -178,7 +179,7 @@ export const createPR = async (
       const repoInfoResponse = await sandbox.runCommand("curl", [
         "-s",
         "-H",
-        `Authorization: token ${process.env.GITHUB_TOKEN}`,
+        `Authorization: token ${githubToken}`,
         "-H",
         "Accept: application/vnd.github.v3+json",
         `https://api.github.com/repos/${owner}/${repo}`,
@@ -201,7 +202,7 @@ export const createPR = async (
         "-X",
         "POST",
         "-H",
-        `Authorization: token ${process.env.GITHUB_TOKEN}`,
+        `Authorization: token ${githubToken}`,
         "-H",
         "Accept: application/vnd.github.v3+json",
         "-H",

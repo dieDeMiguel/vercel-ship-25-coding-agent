@@ -168,7 +168,8 @@ export async function executeChanges(
 export async function createPullRequest(
   repoUrl: string,
   branch: string,
-  changes: Changes
+  changes: Changes,
+  githubToken: string
 ) {
   "use step";
   
@@ -184,7 +185,7 @@ export async function createPullRequest(
       branch: branch
     };
     
-    const result = await createPR(sandbox, repoUrl, prDetails);
+    const result = await createPR(sandbox, repoUrl, prDetails, githubToken);
     
     if (result.error) {
       throw new Error(result.error);

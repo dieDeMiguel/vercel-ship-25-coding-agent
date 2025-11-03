@@ -9,7 +9,8 @@ import {
 export const codeModificationWorkflow = async (
   prompt: string, 
   repoUrl: string,
-  userEmail: string
+  userEmail: string,
+  githubToken: string
 ) => {
   "use workflow";
 
@@ -34,7 +35,8 @@ export const codeModificationWorkflow = async (
   const { prUrl, prNumber } = await createPullRequest(
     validatedRepoUrl,
     branch,
-    changes
+    changes,
+    githubToken
   );
   
   // Step 5: Optional - notify user (with retry logic built-in)
