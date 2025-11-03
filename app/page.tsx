@@ -10,8 +10,8 @@ interface WorkflowResult {
 }
 
 export default function Home() {
-  const [repoUrl, setRepoUrl] = useState("https://github.com/dieDeMiguel/blinkist-starter-kit");
-  const [instruction, setInstruction] = useState("Add a footer component with dark mode support...");
+  const [repoUrl, setRepoUrl] = useState("");
+  const [instruction, setInstruction] = useState("");
   const [githubToken, setGithubToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WorkflowResult | null>(null);
@@ -144,7 +144,7 @@ export default function Home() {
               type="password"
               value={githubToken}
               onChange={(e) => setGithubToken(e.target.value)}
-              placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              placeholder="github_pat_11ANI6W4A0MeQIcWSnqF7a_Izxlvmo5IV..."
               className={cn(
                 "w-full px-4 py-3 bg-[#111] border border-[#333] rounded-lg",
                 "text-white placeholder:text-gray-600 font-mono text-sm",
