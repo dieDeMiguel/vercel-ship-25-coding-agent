@@ -115,7 +115,8 @@ export async function analyzeRepository(
 export async function executeChanges(
   repoUrl: string,
   prompt: string,
-  filesToModify: string[]
+  filesToModify: string[],
+  githubToken: string
 ) {
   "use step";
   
@@ -127,8 +128,8 @@ export async function executeChanges(
     const sandbox = await createSandbox(repoUrl);
     
     // Run the coding agent to determine and execute changes
-    // Pass repoUrl so agent can access repository files
-    const { response } = await codingAgent(prompt, repoUrl);
+    // Pass repoUrl and githubToken so agent can access repository files and create PRs
+    const { response } = await codingAgent(prompt, repoUrl, githubToken);
     
     console.log(`AI agent response: ${response}`);
     

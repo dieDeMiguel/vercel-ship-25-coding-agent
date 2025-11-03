@@ -28,7 +28,8 @@ export const codeModificationWorkflow = async (
   const { changes, branch } = await executeChanges(
     validatedRepoUrl,
     prompt,
-    filesToModify
+    filesToModify,
+    githubToken
   );
   
   // Step 4: Create PR on GitHub (recreates sandbox internally)

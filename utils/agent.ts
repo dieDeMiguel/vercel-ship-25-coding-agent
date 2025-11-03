@@ -9,7 +9,7 @@ import {
   readFile,
 } from "./sandbox";
 
-export async function codingAgent(prompt: string, repoUrl?: string) {
+export async function codingAgent(prompt: string, repoUrl?: string, githubToken?: string) {
   console.log("repoUrl:", repoUrl);
   let sandbox: Sandbox | undefined;
 
@@ -121,11 +121,14 @@ export async function codingAgent(prompt: string, repoUrl?: string) {
         execute: async ({ title, body, branch }) => {
           try {
             if (!sandbox) sandbox = await createSandbox(repoUrl!);
+            if (!githubToken) {
+              return { error: "GitHub token is required to create a PR" };
+            }
             const result = await createPR(sandbox, repoUrl!, {
               title, 
               body, 
               branch, 
-            });
+            }, githubToken);
             
             if (result.error) {
               console.error(`Error creating PR:`, result.error);

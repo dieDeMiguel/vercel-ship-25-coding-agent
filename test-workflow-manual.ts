@@ -11,13 +11,21 @@ async function manualTest() {
   const testConfig = {
     prompt: "Add a footer to the homepage that says 'Tested manually'",
     repoUrl: "https://github.com/dieDeMiguel/blinkist-starter-kit",
-    userEmail: "" // Pass empty string instead of undefined
+    userEmail: "", // Pass empty string instead of undefined
+    githubToken: process.env.GITHUB_TOKEN || "" // Read from environment
   };
+  
+  if (!testConfig.githubToken) {
+    console.error('❌ Error: GITHUB_TOKEN environment variable is required');
+    console.error('   Set it in .env.local or pass it as an environment variable\n');
+    process.exit(1);
+  }
   
   console.log('Test Configuration:');
   console.log(`  Prompt: ${testConfig.prompt}`);
   console.log(`  Repository: ${testConfig.repoUrl}`);
-  console.log(`  Email: ${testConfig.userEmail || 'Not provided'}\n`);
+  console.log(`  Email: ${testConfig.userEmail || 'Not provided'}`);
+  console.log(`  GitHub Token: ${testConfig.githubToken.substring(0, 20)}...\n`);
   console.log('═══════════════════════════════════════════════════════\n');
   
   try {
@@ -26,7 +34,8 @@ async function manualTest() {
     const result = await codeModificationWorkflow(
       testConfig.prompt,
       testConfig.repoUrl,
-      testConfig.userEmail
+      testConfig.userEmail,
+      testConfig.githubToken
     );
     
     console.log('\n✅ Workflow completed successfully!\n');
