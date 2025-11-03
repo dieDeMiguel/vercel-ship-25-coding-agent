@@ -7,6 +7,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { WorkflowProgress } from "@/components/workflow-progress";
 
 interface WorkflowResult {
   runId: string;
@@ -20,6 +21,7 @@ export default function Home() {
   const [githubToken, setGithubToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WorkflowResult | null>(null);
+  const [currentRunId, setCurrentRunId] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,8 +48,12 @@ export default function Home() {
       
       if (!response.ok) {
         setResult({ runId: "", message: "", error: data.error || "Failed to start workflow" });
+        setLoading(false);
       } else {
+        // Set runId immediately to show progress
+        setCurrentRunId(data.runId);
         setResult(data);
+        // Keep loading true until workflow completes
       }
     } catch (error) {
       setResult({
@@ -55,7 +61,6 @@ export default function Home() {
         message: "",
         error: error instanceof Error ? error.message : "Failed to start workflow",
       });
-    } finally {
       setLoading(false);
     }
   };
@@ -73,6 +78,8 @@ export default function Home() {
 
   const handleReset = () => {
     setResult(null);
+    setCurrentRunId(null);
+    setLoading(false);
     setRepoUrl("");
     setInstruction("");
     setGithubToken("");
@@ -239,39 +246,31 @@ export default function Home() {
                 : "bg-[#111] text-gray-600 cursor-not-allowed border border-[#333]"
             )}
           >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2 font-mono">
-                <svg
-                  aria-hidden="true"
-                  className="animate-spin h-4 w-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                Starting Workflow...
-              </span>
-            ) : (
-              <span className="font-mono">Execute Workflow</span>
-            )}
+            <span className="font-mono">Execute Workflow</span>
           </button>
         </form>
 
+        {/* Workflow Progress */}
+        {loading && currentRunId && (
+          <div className="p-6 rounded-lg border border-[#333] bg-[#111] space-y-4">
+            <div className="flex items-center gap-2 pb-4 border-b border-[#333]">
+              <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+              <span className="text-sm font-medium text-white font-mono">
+                Workflow Running
+              </span>
+              <code className="ml-auto text-xs text-gray-500 font-mono">
+                {currentRunId}
+              </code>
+            </div>
+            <WorkflowProgress 
+              runId={currentRunId}
+              onComplete={() => setLoading(false)}
+            />
+          </div>
+        )}
+
         {/* Result Display */}
-        {result && (
+        {!loading && result && (
           <div
             className={cn(
               "p-6 rounded-lg border space-y-3",
