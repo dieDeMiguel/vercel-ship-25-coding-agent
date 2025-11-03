@@ -32,9 +32,11 @@ export function WorkflowProgress({ runId, onComplete }: WorkflowProgressProps) {
   );
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [startTime] = useState(Date.now());
+  const [isCompleted, setIsCompleted] = useState(false);
 
   useEffect(() => {
     if (currentStepIndex >= WORKFLOW_STEPS.length) {
+      setIsCompleted(true);
       onComplete?.();
       return;
     }
@@ -75,18 +77,21 @@ export function WorkflowProgress({ runId, onComplete }: WorkflowProgressProps) {
     <div className="space-y-6">
       {/* Timeline Visual */}
       <div className="relative">
-        {/* Progress Bar Background */}
-        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-[#333]" />
-        
         {/* Steps */}
         <div className="space-y-4">
           {steps.map((step, index) => {
             const isCompleted = step.status === "completed";
             const isRunning = step.status === "running";
             const isPending = step.status === "pending";
+            const isLastStep = index === steps.length - 1;
 
             return (
               <div key={step.id} className="relative flex items-start gap-4">
+                {/* Vertical Line - only show if not the last step */}
+                {!isLastStep && (
+                  <div className="absolute left-4 top-8 bottom-0 w-0.5 bg-[#333]" />
+                )}
+                
                 {/* Status Indicator */}
                 <div className="relative z-10 flex-shrink-0">
                   <div
@@ -123,7 +128,7 @@ export function WorkflowProgress({ runId, onComplete }: WorkflowProgressProps) {
                 </div>
 
                 {/* Step Info */}
-                <div className="flex-1 min-w-0 pb-8">
+                <div className={cn("flex-1 min-w-0", !isLastStep && "pb-8")}>
                   <div className="flex items-center justify-between">
                     <span
                       className={cn(
@@ -160,18 +165,52 @@ export function WorkflowProgress({ runId, onComplete }: WorkflowProgressProps) {
         </div>
       </div>
 
+      {/* Success Message */}
+      {isCompleted && (
+        <div className="mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0">
+              <svg
+                aria-hidden="true"
+                className="w-6 h-6 text-green-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-green-400">
+                Workflow Completed Successfully!
+              </h3>
+              <p className="text-xs text-green-300/70 mt-1">
+                All steps completed in {(totalDuration / 1000).toFixed(1)}s
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Summary */}
-      <div className="flex items-center justify-between pt-4 border-t border-[#333]">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-          <span className="text-xs text-gray-400 font-mono">
-            Workflow in progress
+      {!isCompleted && (
+        <div className="flex items-center justify-between pt-4 border-t border-[#333]">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+            <span className="text-xs text-gray-400 font-mono">
+              Workflow in progress
+            </span>
+          </div>
+          <span className="text-xs text-gray-500 font-mono">
+            {(totalDuration / 1000).toFixed(1)}s
           </span>
         </div>
-        <span className="text-xs text-gray-500 font-mono">
-          {(totalDuration / 1000).toFixed(1)}s
-        </span>
-      </div>
+      )}
     </div>
   );
 }

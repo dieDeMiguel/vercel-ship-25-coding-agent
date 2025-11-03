@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import {
   Tooltip,
@@ -13,6 +13,7 @@ interface WorkflowResult {
   runId: string;
   message: string;
   error?: string;
+  status?: "started" | "completed" | "failed";
 }
 
 export default function Home() {
@@ -22,6 +23,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WorkflowResult | null>(null);
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
+  const [workflowCompleted, setWorkflowCompleted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +85,18 @@ export default function Home() {
     setRepoUrl("");
     setInstruction("");
     setGithubToken("");
+    setWorkflowCompleted(false);
   };
+
+  const handleWorkflowComplete = useCallback(() => {
+    setLoading(false);
+    setWorkflowCompleted(true);
+    setResult(prev => prev ? { 
+      ...prev, 
+      status: "completed", 
+      message: "Workflow completed successfully!" 
+    } : null);
+  }, []);
 
   return (
     <main className="min-h-screen flex items-center justify-center p-4 bg-black">
@@ -251,12 +264,12 @@ export default function Home() {
         </form>
 
         {/* Workflow Progress */}
-        {loading && currentRunId && (
+        {currentRunId && (
           <div className="p-6 rounded-lg border border-[#333] bg-[#111] space-y-4">
             <div className="flex items-center gap-2 pb-4 border-b border-[#333]">
-              <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+              <div className={cn("w-2 h-2 rounded-full", loading ? "bg-blue-400 animate-pulse" : "bg-green-400")} />
               <span className="text-sm font-medium text-white font-mono">
-                Workflow Running
+                {loading ? "Workflow Running" : "Workflow Completed"}
               </span>
               <code className="ml-auto text-xs text-gray-500 font-mono">
                 {currentRunId}
@@ -264,13 +277,24 @@ export default function Home() {
             </div>
             <WorkflowProgress 
               runId={currentRunId}
-              onComplete={() => setLoading(false)}
+              onComplete={handleWorkflowComplete}
             />
           </div>
         )}
 
-        {/* Result Display */}
-        {!loading && result && (
+        {/* Start New Workflow Button - After completion */}
+        {!loading && currentRunId && result && !result.error && (
+          <button
+            type="button"
+            onClick={handleReset}
+            className="w-full text-center text-xs text-gray-400 hover:text-white transition-colors font-mono py-3 border border-[#333] rounded hover:border-[#555]"
+          >
+            Start New Workflow
+          </button>
+        )}
+
+        {/* Result Display - Only for errors now */}
+        {!loading && result && result.error && (
           <div
             className={cn(
               "p-6 rounded-lg border space-y-3",
@@ -317,7 +341,7 @@ export default function Home() {
               <>
                 <div className="flex items-start gap-3">
                   <svg
-                    className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5"
+                    className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -327,41 +351,25 @@ export default function Home() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M5 13l4 4L19 7"
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-green-400">
-                      Workflow Started
+                    <p className="text-sm font-medium text-red-400">
+                      Workflow Failed
                     </p>
-                    <p className="text-xs text-gray-400 font-mono">
-                      {result.message}
+                    <p className="text-xs text-red-300/80 font-mono">
+                      {result.error}
                     </p>
                   </div>
                 </div>
-                
-                {result.runId && (
-                  <div className="pt-3 border-t border-[#333] space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500 font-mono uppercase tracking-wider">
-                        Run ID
-                      </span>
-                      <code className="text-xs text-white font-mono bg-black px-2 py-1 rounded">
-                        {result.runId}
-                      </code>
-                    </div>
-                  </div>
-                )}
-                
-                {!result.error && (
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className="w-full text-center text-xs text-gray-400 hover:text-white transition-colors font-mono py-2 border border-[#333] rounded hover:border-[#555]"
-                  >
-                    Start New Workflow
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="w-full text-center text-xs text-gray-400 hover:text-white transition-colors font-mono py-2 border border-[#333] rounded hover:border-red-500/50"
+                >
+                  Try Again
+                </button>
               </>
             )}
           </div>
