@@ -14,6 +14,9 @@ interface WorkflowResult {
   message: string;
   error?: string;
   status?: "started" | "completed" | "failed";
+  errorType?: "validation" | "auth" | "sandbox" | "network" | "github" | "workflow" | "unknown";
+  errorCode?: string;
+  suggestions?: string[];
 }
 
 export default function Home() {
@@ -23,7 +26,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WorkflowResult | null>(null);
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
-  const [workflowCompleted, setWorkflowCompleted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,12 +87,10 @@ export default function Home() {
     setRepoUrl("");
     setInstruction("");
     setGithubToken("");
-    setWorkflowCompleted(false);
   };
 
   const handleWorkflowComplete = useCallback(() => {
     setLoading(false);
-    setWorkflowCompleted(true);
     setResult(prev => prev ? { 
       ...prev, 
       status: "completed", 
@@ -320,15 +320,45 @@ export default function Home() {
                       d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-red-400">
-                      Workflow Failed
-                    </p>
-                    <p className="text-xs text-red-300/80 font-mono">
-                      {result.error}
-                    </p>
+                  <div className="space-y-1 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-medium text-red-400">
+                          Workflow Failed
+                        </p>
+                        <p className="text-xs text-red-300/80 font-mono mt-1">
+                          {result.error}
+                        </p>
+                      </div>
+                      {result.errorCode && (
+                        <div className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded font-mono whitespace-nowrap">
+                          {result.errorCode}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
+
+                {/* Error Suggestions */}
+                {result.suggestions && result.suggestions.length > 0 && (
+                  <div className="mt-4 p-4 bg-red-500/10 rounded-lg border border-red-500/20">
+                    <p className="text-xs font-medium text-red-300 mb-2 flex items-center gap-2">
+                      <svg aria-hidden="true" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Try these fixes:
+                    </p>
+                    <ul className="space-y-1">
+                      {result.suggestions.map((suggestion) => (
+                        <li key={suggestion} className="text-xs text-red-300/70 font-mono flex gap-2">
+                          <span className="flex-shrink-0">•</span>
+                          <span>{suggestion}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <button
                   type="button"
                   onClick={handleReset}
@@ -337,41 +367,7 @@ export default function Home() {
                   Try Again
                 </button>
               </div>
-            ) : (
-              <>
-                <div className="flex items-start gap-3">
-                  <svg
-                    className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-red-400">
-                      Workflow Failed
-                    </p>
-                    <p className="text-xs text-red-300/80 font-mono">
-                      {result.error}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="w-full text-center text-xs text-gray-400 hover:text-white transition-colors font-mono py-2 border border-[#333] rounded hover:border-red-500/50"
-                >
-                  Try Again
-                </button>
-              </>
-            )}
+            ) : null}
           </div>
         )}
 
