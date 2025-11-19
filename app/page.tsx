@@ -22,7 +22,7 @@ interface WorkflowResult {
 export default function Home() {
   const [repoUrl, setRepoUrl] = useState("");
   const [instruction, setInstruction] = useState("Add a footer component with dark mode support...");
-  const [email, setEmail] = useState("john.smith@vercel.com");
+  const [email, setEmail] = useState("");
   const [githubToken, setGithubToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WorkflowResult | null>(null);
