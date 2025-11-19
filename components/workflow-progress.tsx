@@ -9,67 +9,132 @@ interface Step {
   status: "pending" | "running" | "completed" | "failed";
   duration?: number;
   startTime?: number;
+  error?: string;
 }
 
 interface WorkflowProgressProps {
   runId: string;
   onComplete?: () => void;
+  onError?: (error: string) => void;
 }
 
 const WORKFLOW_STEPS = [
-  { id: "initializeSandbox", name: "Initialize Sandbox", estimatedDuration: 5000 },
-  { id: "analyzeRepository", name: "Analyze Repository", estimatedDuration: 3000 },
-  { id: "executeChanges", name: "Execute AI Changes", estimatedDuration: 30000 },
-  { id: "createPullRequest", name: "Create Pull Request", estimatedDuration: 15000 },
+  { id: "initializeSandbox", name: "Initialize Sandbox" },
+  { id: "analyzeRepository", name: "Analyze Repository" },
+  { id: "executeChanges", name: "Execute AI Changes" },
+  { id: "createPullRequest", name: "Create Pull Request" },
 ];
 
-export function WorkflowProgress({ runId, onComplete }: WorkflowProgressProps) {
+interface WorkflowStatus {
+  runId: string;
+  status: string;
+  error?: {
+    message: string;
+    step?: string;
+  };
+  steps?: Array<{
+    id: string;
+    status: string;
+    startedAt?: string;
+    completedAt?: string;
+    error?: string;
+  }>;
+  createdAt: string;
+  completedAt?: string;
+}
+
+export function WorkflowProgress({ runId, onComplete, onError }: WorkflowProgressProps) {
   const [steps, setSteps] = useState<Step[]>(
     WORKFLOW_STEPS.map((step) => ({
       ...step,
       status: "pending" as const,
     }))
   );
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [workflowStatus, setWorkflowStatus] = useState<string>("running");
+  const [workflowError, setWorkflowError] = useState<string | null>(null);
   const [startTime] = useState(Date.now());
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isFailed, setIsFailed] = useState(false);
 
   useEffect(() => {
-    if (currentStepIndex >= WORKFLOW_STEPS.length) {
-      setIsCompleted(true);
-      onComplete?.();
-      return;
-    }
+    let pollInterval: NodeJS.Timeout;
 
-    const currentStep = WORKFLOW_STEPS[currentStepIndex];
-    const stepStartTime = Date.now();
+    const fetchWorkflowStatus = async () => {
+      try {
+        const response = await fetch(`/api/workflow-stream/${runId}`);
+        
+        if (!response.ok) {
+          console.error("Failed to fetch workflow status:", response.statusText);
+          return;
+        }
 
-    // Mark current step as running
-    setSteps((prev) =>
-      prev.map((step, idx) =>
-        idx === currentStepIndex
-          ? { ...step, status: "running", startTime: stepStartTime }
-          : step
-      )
-    );
+        const data: WorkflowStatus = await response.json();
+        
+        setWorkflowStatus(data.status);
 
-    // Simulate step completion after estimated duration
-    const timer = setTimeout(() => {
-      const duration = Date.now() - stepStartTime;
-      
-      setSteps((prev) =>
-        prev.map((step, idx) =>
-          idx === currentStepIndex
-            ? { ...step, status: "completed", duration }
-            : step
-        )
-      );
+        // Update steps based on workflow response
+        if (data.steps && data.steps.length > 0) {
+          setSteps((prevSteps) =>
+            prevSteps.map((step) => {
+              const workflowStep = data.steps?.find((s) => s.id === step.id);
+              if (workflowStep) {
+                return {
+                  ...step,
+                  status: workflowStep.status as Step["status"],
+                  error: workflowStep.error,
+                  startTime: workflowStep.startedAt ? new Date(workflowStep.startedAt).getTime() : undefined,
+                  duration: workflowStep.completedAt && workflowStep.startedAt
+                    ? new Date(workflowStep.completedAt).getTime() - new Date(workflowStep.startedAt).getTime()
+                    : undefined,
+                };
+              }
+              return step;
+            })
+          );
+        }
 
-      setCurrentStepIndex((prev) => prev + 1);
-    }, currentStep.estimatedDuration);
+        // Handle workflow completion
+        if (data.status === "completed") {
+          setIsCompleted(true);
+          clearInterval(pollInterval);
+          onComplete?.();
+        }
 
-    return () => clearTimeout(timer);
-  }, [currentStepIndex, onComplete]);
+        // Handle workflow failure
+        if (data.status === "failed" || data.error) {
+          setIsFailed(true);
+          const errorMessage = data.error?.message || "Workflow failed";
+          setWorkflowError(errorMessage);
+          
+          // Mark the failed step
+          if (data.error?.step) {
+            setSteps((prevSteps) =>
+              prevSteps.map((step) =>
+                step.id === data.error?.step
+                  ? { ...step, status: "failed" as const, error: errorMessage }
+                  : step
+              )
+            );
+          }
+          
+          clearInterval(pollInterval);
+          onError?.(errorMessage);
+        }
+      } catch (error) {
+        console.error("Error polling workflow status:", error);
+      }
+    };
+
+    // Initial fetch
+    fetchWorkflowStatus();
+
+    // Poll every 2 seconds
+    pollInterval = setInterval(fetchWorkflowStatus, 2000);
+
+    return () => {
+      clearInterval(pollInterval);
+    };
+  }, [runId, onComplete, onError]);
 
   const totalDuration = Date.now() - startTime;
 
@@ -83,6 +148,7 @@ export function WorkflowProgress({ runId, onComplete }: WorkflowProgressProps) {
             const isCompleted = step.status === "completed";
             const isRunning = step.status === "running";
             const isPending = step.status === "pending";
+            const isFailed = step.status === "failed";
             const isLastStep = index === steps.length - 1;
 
             return (
@@ -99,7 +165,8 @@ export function WorkflowProgress({ runId, onComplete }: WorkflowProgressProps) {
                       "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all",
                       isCompleted && "border-green-500 bg-green-500/20",
                       isRunning && "border-blue-500 bg-blue-500/20 animate-pulse",
-                      isPending && "border-[#333] bg-[#111]"
+                      isPending && "border-[#333] bg-[#111]",
+                      isFailed && "border-red-500 bg-red-500/20"
                     )}
                   >
                     {isCompleted && (
@@ -124,6 +191,22 @@ export function WorkflowProgress({ runId, onComplete }: WorkflowProgressProps) {
                     {isPending && (
                       <div className="w-2 h-2 rounded-full bg-gray-600" />
                     )}
+                    {isFailed && (
+                      <svg
+                        aria-hidden="true"
+                        className="w-4 h-4 text-red-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    )}
                   </div>
                 </div>
 
@@ -135,7 +218,8 @@ export function WorkflowProgress({ runId, onComplete }: WorkflowProgressProps) {
                         "text-sm font-mono transition-colors",
                         isCompleted && "text-green-400",
                         isRunning && "text-blue-400",
-                        isPending && "text-gray-500"
+                        isPending && "text-gray-500",
+                        isFailed && "text-red-400"
                       )}
                     >
                       {step.name}
@@ -150,7 +234,19 @@ export function WorkflowProgress({ runId, onComplete }: WorkflowProgressProps) {
                         Running...
                       </span>
                     )}
+                    {isFailed && (
+                      <span className="text-xs text-red-400 font-mono">
+                        Failed
+                      </span>
+                    )}
                   </div>
+
+                  {/* Error Message for Failed Step */}
+                  {isFailed && step.error && (
+                    <div className="mt-2 p-2 bg-red-500/10 border border-red-500/20 rounded text-xs text-red-300 font-mono">
+                      {step.error}
+                    </div>
+                  )}
 
                   {/* Progress Bar for Running Step */}
                   {isRunning && (
@@ -166,7 +262,7 @@ export function WorkflowProgress({ runId, onComplete }: WorkflowProgressProps) {
       </div>
 
       {/* Success Message */}
-      {isCompleted && (
+      {isCompleted && !isFailed && (
         <div className="mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
@@ -197,8 +293,45 @@ export function WorkflowProgress({ runId, onComplete }: WorkflowProgressProps) {
         </div>
       )}
 
+      {/* Failure Message */}
+      {isFailed && (
+        <div className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0">
+              <svg
+                aria-hidden="true"
+                className="w-6 h-6 text-red-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-red-400">
+                Workflow Failed
+              </h3>
+              {workflowError && (
+                <p className="text-xs text-red-300/70 mt-1 font-mono">
+                  {workflowError}
+                </p>
+              )}
+              <p className="text-xs text-red-300/50 mt-2">
+                Failed after {(totalDuration / 1000).toFixed(1)}s
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Summary */}
-      {!isCompleted && (
+      {!isCompleted && !isFailed && (
         <div className="flex items-center justify-between pt-4 border-t border-[#333]">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />

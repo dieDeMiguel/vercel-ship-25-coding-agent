@@ -6,6 +6,9 @@ import {
   notifyUser 
 } from "./steps";
 
+// Note: Workflow status tracking is handled by wrapping this workflow
+// See utils/agent.ts for status tracking implementation
+
 export const codeModificationWorkflow = async (
   prompt: string, 
   repoUrl: string,
@@ -41,7 +44,7 @@ export const codeModificationWorkflow = async (
   );
   
   // Step 5: Optional - notify user (with retry logic built-in)
-  if (userEmail && userEmail.trim()) {
+  if (userEmail?.trim()) {
     await notifyUser({
       email: userEmail,
       prUrl,

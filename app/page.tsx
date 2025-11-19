@@ -20,9 +20,9 @@ interface WorkflowResult {
 }
 
 export default function Home() {
-  const [repoUrl, setRepoUrl] = useState("");
-  const [instruction, setInstruction] = useState("");
-  const [githubToken, setGithubToken] = useState("");
+  const [repoUrl, setRepoUrl] = useState("https://github.com/dieDeMiguel/blinkist-starter-kit");
+  const [instruction, setInstruction] = useState("Add a footer component with dark mode support...");
+  const [githubToken, setGithubToken] = useState("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");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WorkflowResult | null>(null);
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
@@ -95,6 +95,16 @@ export default function Home() {
       ...prev, 
       status: "completed", 
       message: "Workflow completed successfully!" 
+    } : null);
+  }, []);
+
+  const handleWorkflowError = useCallback((error: string) => {
+    setLoading(false);
+    setResult(prev => prev ? {
+      ...prev,
+      status: "failed",
+      error: error,
+      message: ""
     } : null);
   }, []);
 
@@ -267,9 +277,12 @@ export default function Home() {
         {currentRunId && (
           <div className="p-6 rounded-lg border border-[#333] bg-[#111] space-y-4">
             <div className="flex items-center gap-2 pb-4 border-b border-[#333]">
-              <div className={cn("w-2 h-2 rounded-full", loading ? "bg-blue-400 animate-pulse" : "bg-green-400")} />
+              <div className={cn(
+                "w-2 h-2 rounded-full", 
+                loading ? "bg-blue-400 animate-pulse" : result?.status === "failed" ? "bg-red-400" : "bg-green-400"
+              )} />
               <span className="text-sm font-medium text-white font-mono">
-                {loading ? "Workflow Running" : "Workflow Completed"}
+                {loading ? "Workflow Running" : result?.status === "failed" ? "Workflow Failed" : "Workflow Completed"}
               </span>
               <code className="ml-auto text-xs text-gray-500 font-mono">
                 {currentRunId}
@@ -278,12 +291,13 @@ export default function Home() {
             <WorkflowProgress 
               runId={currentRunId}
               onComplete={handleWorkflowComplete}
+              onError={handleWorkflowError}
             />
           </div>
         )}
 
-        {/* Start New Workflow Button - After completion */}
-        {!loading && currentRunId && result && !result.error && (
+        {/* Start New Workflow Button - After completion or failure */}
+        {!loading && currentRunId && result && (result.status === "completed" || result.status === "failed") && (
           <button
             type="button"
             onClick={handleReset}

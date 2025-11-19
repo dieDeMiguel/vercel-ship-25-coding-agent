@@ -1,5 +1,7 @@
 import { start } from "workflow/api";
 import { codeModificationWorkflow } from "../../../workflows/codeModification";
+import { createWorkflowStatus } from "@/lib/workflow-status";
+import { monitorWorkflow } from "@/utils/workflow-tracker";
 
 interface WorkflowRequest {
   prompt: string;
@@ -199,6 +201,12 @@ export async function POST(request: Request): Promise<Response> {
     );
     
     console.log(`[WORKFLOW] Workflow started successfully with runId: ${runId}`);
+    
+    // Initialize workflow status tracking
+    createWorkflowStatus(runId);
+    
+    // Start monitoring workflow progress
+    monitorWorkflow(runId);
     
     return new Response(
       JSON.stringify({
