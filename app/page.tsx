@@ -22,6 +22,7 @@ interface WorkflowResult {
 export default function Home() {
   const [repoUrl, setRepoUrl] = useState("https://github.com/dieDeMiguel/blinkist-starter-kit");
   const [instruction, setInstruction] = useState("Add a footer component with dark mode support...");
+  const [email, setEmail] = useState("diego@vercel.com");
   const [githubToken, setGithubToken] = useState("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");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WorkflowResult | null>(null);
@@ -43,7 +44,7 @@ export default function Home() {
         body: JSON.stringify({
           prompt: instruction,
           repoUrl: repoUrl,
-          userEmail: "",
+          userEmail: email,
           githubToken: githubToken,
         }),
       });
@@ -86,6 +87,7 @@ export default function Home() {
     setLoading(false);
     setRepoUrl("");
     setInstruction("");
+    setEmail("diego@vercel.com");
     setGithubToken("");
   };
 
@@ -175,6 +177,32 @@ export default function Home() {
               )}
               required
             />
+          </div>
+
+          {/* Email Input */}
+          <div className="space-y-2">
+            <label
+              htmlFor="email"
+              className="block text-xs font-medium text-gray-400 uppercase tracking-wider font-mono"
+            >
+              Email (Optional)
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="diego@vercel.com"
+              className={cn(
+                "w-full px-4 py-3 bg-[#111] border border-[#333] rounded-lg",
+                "text-white placeholder:text-gray-600 font-mono text-sm",
+                "focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent",
+                "transition-all duration-200"
+              )}
+            />
+            <p className="text-xs text-gray-500 font-mono">
+              Receive notification when workflow completes (demonstrates retry logic).
+            </p>
           </div>
 
           {/* GitHub Token Input */}

@@ -1,4 +1,4 @@
-import { FatalError, RetryableError } from "workflow";
+import { FatalError, RetryableError, getStepMetadata } from "workflow";
 import { 
   createSandbox, 
   listFiles, 
@@ -33,17 +33,17 @@ export async function initializeSandbox(repoUrl: string) {
   "use step";
   
   try {
-    console.log(`🚀 [STEP 1/4] Initializing sandbox for repository: ${repoUrl}`);
-    console.log(`⏳ Creating isolated sandbox environment...`);
+    console.log(`[STEP 1/4] Initializing sandbox for repository: ${repoUrl}`);
+    console.log(`Creating isolated sandbox environment...`);
     const sandbox = await createSandbox(repoUrl);
     
     console.log(`✓ Sandbox created successfully`);
-    console.log(`📦 Cloning repository...`);
+    console.log(`Cloning repository...`);
     const repoInfoResult = await sandbox.runCommand("git", ["remote", "-v"]);
     const repoInfo = await repoInfoResult.output();
     
     console.log(`✓ Repository cloned successfully`);
-    console.log(`📋 Repository info:\n${repoInfo}`);
+    console.log(`Repository info:\n${repoInfo}`);
     
     // ✅ FIX: Only return serializable data (strings), not the Sandbox instance
     return { 
@@ -79,15 +79,15 @@ export async function analyzeRepository(
   "use step";
   
   try {
-    console.log(`🔍 [STEP 2/4] Analyzing repository structure`);
-    console.log(`📝 Task: "${prompt}"`);
+    console.log(`[STEP 2/4] Analyzing repository structure`);
+    console.log(`Task: "${prompt}"`);
     
     // ✅ FIX: Recreate sandbox from repoUrl instead of receiving instance
-    console.log(`⏳ Reconnecting to sandbox...`);
+    console.log(`Reconnecting to sandbox...`);
     const sandbox = await createSandbox(repoUrl);
     
     // List root directory to understand project structure
-    console.log(`📂 Scanning repository structure...`);
+    console.log(`Scanning repository structure...`);
     const rootFiles = await listFiles(sandbox, ".");
     
     // Determine likely files to modify based on prompt keywords
@@ -103,7 +103,7 @@ export async function analyzeRepository(
     };
     
     console.log(`✓ Analysis complete`);
-    console.log(`📁 Suggested files to modify: ${filesToModify.join(", ")}`);
+    console.log(`Suggested files to modify: ${filesToModify.join(", ")}`);
     
     return { 
       filesToModify, 
@@ -129,21 +129,21 @@ export async function executeChanges(
   "use step";
   
   try {
-    console.log(`🤖 [STEP 3/4] Executing AI-driven code modifications`);
-    console.log(`📝 Task: "${prompt}"`);
-    console.log(`🎯 Target files: ${filesToModify.join(", ")}`);
+    console.log(`[STEP 3/4] Executing AI-driven code modifications`);
+    console.log(`Task: "${prompt}"`);
+    console.log(`Target files: ${filesToModify.join(", ")}`);
     
     // ✅ FIX: Recreate sandbox from repoUrl
-    console.log(`⏳ Reconnecting to sandbox...`);
+    console.log(`Reconnecting to sandbox...`);
     const sandbox = await createSandbox(repoUrl);
     
     // Run the coding agent to determine and execute changes
     // Pass repoUrl and githubToken so agent can access repository files and create PRs
-    console.log(`🧠 Invoking AI agent with GPT-4...`);
+    console.log(`Invoking AI agent with GPT-4...`);
     const { response } = await codingAgent(prompt, repoUrl, githubToken);
     
     console.log(`✓ AI agent completed`);
-    console.log(`📋 Agent summary: ${response}`);
+    console.log(`Agent summary: ${response}`);
     
     // Commit the changes
     const branch = `ai-change-${Date.now()}`;
@@ -187,11 +187,11 @@ export async function createPullRequest(
   "use step";
   
   try {
-    console.log(`🔀 [STEP 4/4] Creating pull request`);
-    console.log(`🌿 Branch: ${branch}`);
+    console.log(`[STEP 4/4] Creating pull request`);
+    console.log(`Branch: ${branch}`);
     
     // ✅ FIX: Recreate sandbox from repoUrl
-    console.log(`⏳ Reconnecting to sandbox...`);
+    console.log(`Reconnecting to sandbox...`);
     const sandbox = await createSandbox(repoUrl);
     
     const prDetails = {
@@ -200,7 +200,7 @@ export async function createPullRequest(
       branch: branch
     };
     
-    console.log(`📤 Pushing changes to GitHub...`);
+    console.log(`Pushing changes to GitHub...`);
     const result = await createPR(sandbox, repoUrl, prDetails, githubToken);
     
     if (result.error) {
@@ -208,7 +208,7 @@ export async function createPullRequest(
     }
     
     console.log(`✓ Pull request created successfully!`);
-    console.log(`🔗 PR URL: ${result.pr_url}`);
+    console.log(`PR URL: ${result.pr_url}`);
     
     return { 
       prUrl: result.pr_url, 
@@ -229,7 +229,21 @@ export async function notifyUser(data: NotificationData) {
   "use step";
   
   try {
-    console.log(`Sending notification to: ${data.email}`);
+    // Get step metadata to track retry attempts
+    const metadata = getStepMetadata();
+    console.log(`[NOTIFICATION] Attempting to send email (Attempt ${metadata.attempt} of ${(notifyUser.maxRetries || 0) + 1})`);
+    
+    //  Simulate 50% failure rate to demonstrate durable retry behavior
+    const shouldFail = Math.random() < 0.5;
+    if (shouldFail) {
+      console.error(`[NOTIFICATION] Service temporarily unavailable (simulated failure for demo)`);
+      throw new RetryableError(
+        `Notification service temporarily unavailable. Will retry...`,
+        { retryAfter: metadata.attempt * 2 } // Exponential backoff: 2s, 4s, 6s
+      );
+    }
+    
+    console.log(`✓ [NOTIFICATION] Service available, sending email to: ${data.email}`);
     
     const notification = {
       to: data.email,
@@ -242,22 +256,34 @@ Pull Request: ${data.prUrl}
 Files Modified: ${data.changes.filesModified.join(", ")}
 
 Review and merge your changes at the link above.
+
+  Delivery Stats: Delivered after ${metadata.attempt} attempt(s)
       `.trim(),
       timestamp: new Date().toISOString()
     };
     
     // In a real implementation, this would call Resend, SendGrid, or similar
-    console.log(`Notification prepared:`, notification);
+    console.log(`[NOTIFICATION] Sent successfully:`, notification);
     
     return { 
       status: "sent", 
-      notificationId: `notif_${Date.now()}` 
+      notificationId: `notif_${Date.now()}`,
+      attempts: metadata.attempt,
+      deliveredAt: new Date().toISOString()
     };
   } catch (error) {
-    console.error(`Notification failed: ${(error as Error).message}`);
+    // If it's already a RetryableError, re-throw it to let the workflow retry
+    if (error instanceof RetryableError) {
+      throw error;
+    }
+    
+    console.error(`[NOTIFICATION] Fatal error: ${(error as Error).message}`);
     throw new FatalError(`Failed to notify user: ${(error as Error).message}`);
   }
 }
+
+// Configure explicit retry limit: 3 retries (4 total attempts: 1 initial + 3 retries)
+notifyUser.maxRetries = 3;
 
 // Helper function to determine which files to modify based on prompt
 function determineFilesToModify(prompt: string): string[] {
