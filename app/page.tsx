@@ -20,10 +20,10 @@ interface WorkflowResult {
 }
 
 export default function Home() {
-  const [repoUrl, setRepoUrl] = useState("https://github.com/dieDeMiguel/blinkist-starter-kit");
+  const [repoUrl, setRepoUrl] = useState("");
   const [instruction, setInstruction] = useState("Add a footer component with dark mode support...");
-  const [email, setEmail] = useState("diego@vercel.com");
-  const [githubToken, setGithubToken] = useState("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");
+  const [email, setEmail] = useState("john.smith@vercel.com");
+  const [githubToken, setGithubToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<WorkflowResult | null>(null);
   const [currentRunId, setCurrentRunId] = useState<string | null>(null);
